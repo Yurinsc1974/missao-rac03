@@ -344,29 +344,23 @@
       <button id="exportBtn">Exportar resultado para CSV</button>
     `;
 
-    fetch("https://script.google.com/macros/s/AKfycbyj5QaQhDbK5_TmOnCnPbxo_ZIW7qUmcrJWNRgcVD5NDELS5AcE5QntrNAt3PFZDlfOyw/exec", {
-      method: "POST",
-      body: JSON.stringify({
-        nome: playerName,
-        media: avg.toFixed(2),
-        perfilRisco: riskProfile,
-        perfilAtencao: attentionProfile
-      }),
-      headers: {
-        "Content-Type": "application/json"
-      }
-    })
-    .then(response => response.text())
-    .then(text => {
-      console.log("Resposta do Sheets:", text);
-      alert("Seus dados foram enviados com sucesso!");
-    })
-    .catch(error => {
-      console.error("Erro ao enviar:", error);
-      alert("Houve um erro ao enviar seus dados. Tente novamente.");
-    });
+    fetch("https://script.google.com/macros/s/AKfycbzk1C1zcs5oXOtR4fyuKsNroPzRQiZ-pTKQ2VMlXItQrB3WsXaoArxuWleZdjhJDiLDFQ/exec", {
+  method: "POST",
+  body: JSON.stringify({
+    nome: playerName,
+    media: avg.toFixed(2),
+    perfilRisco: riskProfile,
+    perfilAtencao: attentionProfile
+  }),
+  headers: {
+    "Content-Type": "application/json"
   }
+})
+.then(response => response.text())
+.then(text => console.log("Resposta do Sheets:", text))
+..catch(error => console.error("Erro ao enviar:", error));
 </script>
+
 
 </body>
 </html>
