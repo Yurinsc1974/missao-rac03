@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8" />
+<title>Missão RAC 03 – Análise de Risco e Perfil</title>
+<style>
+ body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: url("https://yt3.googleusercontent.com/VBoWFGKLuhLz6yDttQNy_NTPEYum5zQYQnCgeL4XePuIuRbpuvjD55tI9SgZm7HWR9Ph4HLH=s900-c-k-c0x00ffffff-no-rj") center center no-repeat;
+  background-size: cover;
+  opacity: 1;
+  z-index: -2;
+}
+
+
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 900px;
+    margin: 80px auto 40px auto;
+    background: #f4f7fa;
+    color: #333;
+    position: relative;
+  }
+
+  h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    margin-top: 30px;
+    font-weight: bold;
+    color: white;
+    background-color: #007bff;
+    padding: 10px;
+    border-radius: 8px;
+  }
+
+  #nameInput {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  #playerName {
+    padding: 10px;
+    font-size: 16px;
+    width: 250px;
+  }
+
+  button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    font-size: 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 15px;
+  }
+
+  button:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+  }
+
+  #gameForm {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    height: 440px;
+    margin: 0 auto;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    background: #222;
+    color: white;
+  }
+
+  #scenarioImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.45);
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 0;
+  }
+
+  #questionBox {
+    position: absolute;
+    top: 15%;
+    left: 5%;
+    right: 5%;
+    background: rgba(0,0,0,0.75);
+    padding: 20px 30px;
+    border-radius: 10px;
+    max-height: 70%;
+    overflow-y: auto;
+    z-index: 10;
+  }
+
+  #questionBox p {
+    font-size: 20px;
+    margin-bottom: 20px;
+  }
+
+  .options label {
+    display: block;
+    font-size: 18px;
+    margin: 8px 0;
+    cursor: pointer;
+  }
+
+  .options input[type="radio"] {
+    margin-right: 10px;
+    transform: scale(1.3);
+    vertical-align: middle;
+  }
+
+  #result {
+    max-width: 600px;
+    margin: 40px auto;
+    background: white;
+    color: #222;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+    font-size: 18px;
+  }
+
+  #exportBtn {
+    display: block;
+    margin: 20px auto;
+    background: #28a745;
+  }
+</style>
+</head>
+<body>
+
+<h2>🏗️ Missão RAC 03 – Análise de Risco e Perfil</h2>
+
+<div id="nameInput">
+  <input type="text" id="playerName" placeholder="Digite seu nome ou apelido" />
+  <br />
+  <button id="startBtn">Iniciar</button>
+</div>
+
+<div id="gameForm" style="display:none;">
+  <img id="scenarioImage" src="" alt="Cenário" />
+  <div id="questionBox">
+    <p id="questionText"></p>
+    <div class="options" id="optionsContainer"></div>
+    <button id="nextBtn" disabled>Próximo</button>
+  </div>
+</div>
+
+<div id="result" style="display:none;"></div>
+
+<script>
+  const scenarios = [
+    {
+      img: "https://images.unsplash.com/photo-1603791440384-56cd371ee9a7?auto=format&fit=crop&w=800&q=80",
+      question: "Durante a inspeção, você nota um equipamento com um pequeno defeito não crítico. Qual sua ação?",
+      options: [
+        { text: "Seguir com a tarefa normalmente", value: 5 },
+        { text: "Fazer reparo antes de continuar", value: 1 },
+        { text: "Ignorar o defeito, não compromete", value: 4 },
+        { text: "Parar a tarefa e comunicar", value: 1 }
+      ]
+    },
+    {
+      img: "https://eqpro.com.br/wp-content/uploads/2017/08/epi-equipamento-seguranca-equipro-02z.jpg?auto=format&fit=crop&w=800&q=80",
+      question: "Um colaborador alega que o equipamento de proteção está desconfortável e quer dispensá-lo temporariamente. Você permite?",
+      options: [
+        { text: "Sim, para agilizar", value: 5 },
+        { text: "Não, segurança em primeiro lugar", value: 1 },
+        { text: "Permite com supervisão", value: 3 },
+        { text: "Consulta equipe antes", value: 2 }
+      ]
+    },
+    {
+      img: "https://images.unsplash.com/photo-1573164574572-cb89e39749b4?auto=format&fit=crop&w=800&q=80",
+      question: "O planejamento da tarefa foi feito há semanas, mas o local passou por mudanças recentes não avaliadas. Como avalia o risco?",
+      options: [
+        { text: "Confia no planejamento inicial e segue", value: 5 },
+        { text: "Reavalia o local antes da tarefa", value: 1 },
+        { text: "Solicita inspeção extra", value: 1 },
+        { text: "Segue mas com mais cuidado", value: 3 }
+      ]
+    },
+    {
+      img: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80",
+      question: "Previsão de ventos fortes para o período do trabalho. Você decide seguir com a atividade?",
+      options: [
+        { text: "Sim, sem alterações", value: 5 },
+        { text: "Ajusta o plano para maior segurança", value: 2 },
+        { text: "Adia o trabalho", value: 1 },
+        { text: "Segue, mas alerta equipe", value: 3 }
+      ]
+    },
+    {
+      img: "https://vale.com/documents/d/guest/estrada-de-ferro-vitoria-img-1-png-7?auto=format&fit=crop&w=800&q=80",
+      question: "Um técnico recusa usar trava-quedas por desconforto. O que você faz?",
+      options: [
+        { text: "Permite para agilizar", value: 5 },
+        { text: "Exige o uso, mesmo desconfortável", value: 1 },
+        { text: "Busca outro equipamento mais confortável", value: 2 },
+        { text: "Suspende a atividade até resolver", value: 1 }
+      ]
+    },
+    {
+      img: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=800&q=80",
+      question: "A tarefa será realizada em área com baixa iluminação no final do turno. Qual seu nível de risco?",
+      options: [
+        { text: "Segue normalmente", value: 5 },
+        { text: "Adota iluminação extra", value: 1 },
+        { text: "Adia para outro horário", value: 1 },
+        { text: "Segue, mas com cuidado redobrado", value: 3 }
+      ]
+    },
+    {
+      img: "https://vale.com/documents/d/guest/nossos-compromissos-header?auto=format&fit=crop&w=800&q=80",
+      question: "Você percebe um ruído mecânico anormal na plataforma que será usada. Segue com o uso?",
+      options: [
+        { text: "Sim, porque está no prazo de manutenção", value: 4 },
+        { text: "Para a operação imediatamente", value: 1 },
+        { text: "Solicita manutenção antes de usar", value: 1 },
+        { text: "Segue, mas alerta a equipe", value: 3 }
+      ]
+    },
+    {
+      img: "https://images.unsplash.com/photo-1501594907352-04cda38ebc29?auto=format&fit=crop&w=800&q=80",
+      question: "O trabalho exige movimentação lateral em altura, mas não há linha de vida instalada. Avalie o risco.",
+      options: [
+        { text: "Segue normalmente", value: 5 },
+        { text: "Não realiza sem linha de vida", value: 1 },
+        { text: "Usa outro método de segurança", value: 2 },
+        { text: "Realiza com supervisão extra", value: 3 }
+      ]
+    },
+    {
+      img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRunBFbbgNNjH0xfWm0obEg6Wy0FlZLDbdGTg&s?auto=format&fit=crop&w=800&q=80",
+      question: "Há pessoas circulando na área de trabalho em altura. Você mantém a operação?",
+      options: [
+        { text: "Sim, desde que avisadas", value: 4 },
+        { text: "Não, interrompe até área livre", value: 1 },
+        { text: "Sinaliza e alerta as pessoas", value: 2 },
+        { text: "Segue, mas com mais cuidado", value: 3 }
+      ]
+    },
+    {
+      img: "https://images.unsplash.com/photo-1556761175-4b46a572b786?auto=format&fit=crop&w=800&q=80",
+      question: "Seu gestor sugere dispensar um EPI obrigatório para agilizar a tarefa. Aceita?",
+      options: [
+        { text: "Sim, para não atrasar", value: 5 },
+        { text: "Não, segurança em primeiro lugar", value: 1 },
+        { text: "Consulta equipe antes de decidir", value: 3 },
+        { text: "Tenta negociar melhor equipamento", value: 2 }
+      ]
+    }
+  ];
+
+  let currentStep = 0;
+  let answers = [];
+  let playerName = "";
+
+  const playerNameInput = document.getElementById("playerName");
+  const startBtn = document.getElementById("startBtn");
+  const gameForm = document.getElementById("gameForm");
+  const scenarioImage = document.getElementById("scenarioImage");
+  const questionText = document.getElementById("questionText");
+  const optionsContainer = document.getElementById("optionsContainer");
+  const nextBtn = document.getElementById("nextBtn");
+  const resultDiv = document.getElementById("result");
+  const nameInputDiv = document.getElementById("nameInput");
+
+  startBtn.addEventListener("click", () => {
+    const name = playerNameInput.value.trim();
+    if (!name) {
+      alert("Por favor, digite seu nome ou apelido.");
+      return;
+    }
+    playerName = name;
+    nameInputDiv.style.display = "none";
+    gameForm.style.display = "block";
+    currentStep = 0;
+    answers = [];
+    showScenario(currentStep);
+  });
+
+  function showScenario(index) {
+    const scenario = scenarios[index];
+    scenarioImage.src = scenario.img;
+    scenarioImage.alt = `Cenário ${index + 1}`;
+    questionText.textContent = scenario.question;
+
+    optionsContainer.innerHTML = "";
+    nextBtn.disabled = true;
+
+    scenario.options.forEach(opt => {
+      const label = document.createElement("label");
+      const input = document.createElement("input");
+      input.type = "radio";
+      input.name = "risk";
+      input.value = opt.value;
+      input.addEventListener("change", () => nextBtn.disabled = false);
+      label.appendChild(input);
+      label.append(` ${opt.text}`);
+      optionsContainer.appendChild(label);
+    });
+  }
+
+  nextBtn.addEventListener("click", () => {
+    const selected = document.querySelector("input[name='risk']:checked");
+    if (!selected) return alert("Por favor, selecione uma opção para continuar.");
+    answers.push(parseInt(selected.value));
+    currentStep++;
+    currentStep < scenarios.length ? showScenario(currentStep) : finishGame();
+  });
+
+  function calculateAttention(scores) {
+    const diffs = scores.slice(1).map((v, i) => Math.abs(v - scores[i]));
+    const avg = diffs.reduce((a, b) => a + b, 0) / diffs.length;
+    return avg <= 1 ? "Alta atenção e consistência."
+         : avg <= 2 ? "Atenção moderada, algumas variações."
+         : "Baixa atenção, respostas inconsistentes.";
+  }
+
+  function finishGame() {
+    gameForm.style.display = "none";
+    const total = answers.reduce((a, b) => a + b, 0);
+    const avg = total / answers.length;
+    const attentionProfile = calculateAttention(answers);
+    const riskProfile = avg <= 2 ? "Conservador e cuidadoso."
+                       : avg <= 3.5 ? "Moderado, avalia riscos com equilíbrio."
+                       : "Ousado e com possível tendência a negligenciar riscos.";
+
+    resultDiv.style.display = "block";
+    resultDiv.innerHTML = `
+      <h3>Obrigado, ${playerName}!</h3>
+      <p>Sua pontuação média de risco foi <b>${avg.toFixed(2)}</b>.</p>
+      <p><b>Perfil de risco identificado:</b> ${riskProfile}</p>
+      <p><b>Perfil de atenção:</b> ${attentionProfile}</p>
+      <p>Recomenda-se sempre priorizar a segurança e avaliar riscos com atenção.</p>
+      <button id="exportBtn">Exportar resultado para CSV</button>
+    `;
+
+    fetch("https://script.google.com/macros/s/AKfycbyj5QaQhDbK5_TmOnCnPbxo_ZIW7qUmcrJWNRgcVD5NDELS5AcE5QntrNAt3PFZDlfOyw/exec", {
+      method: "POST",
+      body: JSON.stringify({
+        nome: playerName,
+        media: avg.toFixed(2),
+        perfilRisco: riskProfile,
+        perfilAtencao: attentionProfile
+      }),
+      headers: {
+        "Content-Type": "application/json"
+      }
+    })
+    .then(response => response.text())
+    .then(text => {
+      console.log("Resposta do Sheets:", text);
+      alert("Seus dados foram enviados com sucesso!");
+    })
+    .catch(error => {
+      console.error("Erro ao enviar:", error);
+      alert("Houve um erro ao enviar seus dados. Tente novamente.");
+    });
+  }
+</script>
+
+</body>
+</html>
