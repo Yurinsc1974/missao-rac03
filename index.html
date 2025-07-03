@@ -344,21 +344,22 @@
       <button id="exportBtn">Exportar resultado para CSV</button>
     `;
 
-    fetch("https://script.google.com/macros/s/AKfycbykxPSY57LSDbQ_xHsTw-uGcAWcXcgqRLMptzSrw7186_BMh_FHfYUgVewfVrrEGPtfXA/exec", {
+    fetch("https://script.google.com/macros/s/SEU_SCRIPT_ID/exec", {
   method: "POST",
-  body: JSON.stringify({
+  headers: {
+    "Content-Type": "application/x-www-form-urlencoded"
+  },
+  body: new URLSearchParams({
     nome: playerName,
     media: avg.toFixed(2),
     perfilRisco: riskProfile,
     perfilAtencao: attentionProfile
-  }),
-  headers: {
-    "Content-Type": "application/json"
-  }
+  })
 })
-.then(response => response.text())
-.then(text => console.log("Resposta do Sheets:", text))
+.then(response => response.json())
+.then(data => console.log("Resposta do Sheets:", data))
 .catch(error => console.error("Erro ao enviar:", error));
+
 }
 </script>
 
