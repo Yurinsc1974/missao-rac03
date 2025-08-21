@@ -1,366 +1,224 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8" />
-<title>Roda de conversa RAC 03</title>
-<style>
-  body::before {
-    content: "";
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: url("https://yt3.googleusercontent.com/VBoWFGKLuhLz6yDttQNy_NTPEYum5zQYQnCgeL4XePuIuRbpuvjD55tI9SgZm7HWR9Ph4HLH=s900-c-k-c0x00ffffff-no-rj") center center no-repeat;
-    background-size: cover;
-    opacity: 1;
-    z-index: -2;
-  }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Missão RAC 03 – Análise de Risco e Perfil</title>
+  <style>
+    /* Fundo como no original */
+    body::before { content:""; position:fixed; inset:0; background:url("https://yt3.googleusercontent.com/VBoWFGKLuhLz6yDttQNy_NTPEYum5zQYQnCgeL4XePuIuRbpuvjD55tI9SgZm7HWR9Ph4HLH=s900-c-k-c0x00ffffff-no-rj") center center no-repeat; background-size:cover; opacity:1; z-index:-2; }
+    body{ font-family: Arial, sans-serif; max-width: 900px; margin: 80px auto 40px; background:#f4f7fa; color:#333; }
+    h2{ text-align:center; margin:30px 0; font-weight:bold; color:#fff; background:#007bff; padding:10px; border-radius:8px; }
+    #nameInput{ text-align:center; margin-bottom:20px; }
+    #playerName{ padding:10px; font-size:16px; width:260px; }
+    button{ background:#007bff; color:#fff; border:none; padding:12px 30px; font-size:16px; border-radius:6px; cursor:pointer; margin-top:15px; }
+    button:disabled{ background:#cccccc; cursor:not-allowed; }
 
-  body {
-    font-family: Arial, sans-serif;
-    max-width: 900px;
-    margin: 80px auto 40px auto;
-    background: #f4f7fa;
-    color: #333;
-    position: relative;
-  }
+    /* Tela de perguntas */
+    #gameForm{ position:relative; width:100%; max-width:800px; height:480px; margin:0 auto; border-radius:10px; overflow:hidden; box-shadow:0 8px 20px rgba(0,0,0,0.2); background:#222; color:#fff; display:none; }
+    #scenarioImage{ width:100%; height:100%; object-fit:cover; filter:brightness(0.45); position:absolute; inset:0; z-index:0; }
+    #questionBox{ position:absolute; top:12%; left:5%; right:5%; background:rgba(0,0,0,0.75); padding:18px 24px; border-radius:10px; max-height:72%; overflow-y:auto; z-index:10; }
+    #questionBox p{ font-size:20px; margin:0 0 16px 0; }
+    .options label{ display:block; font-size:18px; margin:8px 0; cursor:pointer; }
+    .options input[type="radio"]{ margin-right:10px; transform:scale(1.2); vertical-align:middle; }
+    #nextBtn{ position:absolute; bottom:16px; right:16px; }
+    #progress{ position:absolute; bottom:16px; left:16px; color:#e5e7eb; font-size:14px; }
 
-  h2 {
-    text-align: center;
-    margin-bottom: 30px;
-    margin-top: 30px;
-    font-weight: bold;
-    color: white;
-    background-color: #007bff;
-    padding: 10px;
-    border-radius: 8px;
-  }
+    /* Resultado */
+    #result{ display:none; max-width:700px; margin:40px auto; background:#fff; color:#222; padding:25px; border-radius:12px; box-shadow:0 6px 15px rgba(0,0,0,0.1); font-size:18px; }
+    #exportBtn{ background:#28a745; }
 
-  #nameInput {
-    text-align: center;
-    margin-bottom: 20px;
-  }
-
-  #playerName {
-    padding: 10px;
-    font-size: 16px;
-    width: 250px;
-  }
-
-  button {
-    background: #007bff;
-    color: white;
-    border: none;
-    padding: 12px 30px;
-    font-size: 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    margin-top: 15px;
-  }
-
-  button:disabled {
-    background: #cccccc;
-    cursor: not-allowed;
-  }
-
-  #gameForm {
-    position: relative;
-    width: 100%;
-    max-width: 800px;
-    height: 440px;
-    margin: 0 auto;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-    background: #222;
-    color: white;
-  }
-
-  #scenarioImage {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    filter: brightness(0.45);
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    z-index: 0;
-  }
-
-  #questionBox {
-    position: absolute;
-    top: 15%;
-    left: 5%;
-    right: 5%;
-    background: rgba(0,0,0,0.75);
-    padding: 20px 30px;
-    border-radius: 10px;
-    max-height: 70%;
-    overflow-y: auto;
-    z-index: 10;
-  }
-
-  #questionBox p {
-    font-size: 20px;
-    margin-bottom: 20px;
-  }
-
-  .options label {
-    display: block;
-    font-size: 18px;
-    margin: 8px 0;
-    cursor: pointer;
-  }
-
-  .options input[type="radio"] {
-    margin-right: 10px;
-    transform: scale(1.3);
-    vertical-align: middle;
-  }
-
-  #result {
-    max-width: 600px;
-    margin: 40px auto;
-    background: white;
-    color: #222;
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0 6px 15px rgba(0,0,0,0.1);
-    font-size: 18px;
-  }
-
-  #exportBtn {
-    display: block;
-    margin: 20px auto;
-    background: #28a745;
-  }
-</style>
+    @media(max-width:640px){ #gameForm{ height:520px; } }
+  </style>
 </head>
 <body>
+  <h2>Missão RAC 03 – Análise de Risco e Perfil</h2>
 
-<h2>🏗️ Missão RAC 03 – Análise de Risco e Perfil</h2>
+  <!-- Intro -->
+  <div id="nameInput">
+    <input type="text" id="playerName" placeholder="Digite seu nome ou apelido" />
+    <br />
+    <button id="startBtn">Iniciar</button>
+  </div>
 
-<div id="nameInput">
-  <input type="text" id="playerName" placeholder="Digite seu nome ou apelido" />
-  <br />
-  <button id="startBtn">Iniciar</button>
-</div>
-
-<div id="gameForm" style="display:none;">
-  <img id="scenarioImage" src="" alt="Cenário" />
-  <div id="questionBox">
-    <p id="questionText"></p>
-    <div class="options" id="optionsContainer"></div>
+  <!-- Jogo -->
+  <div id="gameForm">
+    <img id="scenarioImage" src="https://images.unsplash.com/photo-1603791440384-56cd371ee9a7?auto=format&fit=crop&w=1200&q=80" alt="Cenário" />
+    <div id="questionBox">
+      <p id="questionText"></p>
+      <div class="options" id="optionsContainer"></div>
+    </div>
+    <div id="progress"></div>
     <button id="nextBtn" disabled>Próximo</button>
   </div>
-</div>
 
-<div id="result" style="display:none;"></div>
+  <!-- Resultado -->
+  <div id="result"></div>
 
-<script>
-  const scenarios = [
-    {
-      img: "https://images.unsplash.com/photo-1603791440384-56cd371ee9a7?auto=format&fit=crop&w=800&q=80",
-      question: "1.Com o uso da marcha correta o que garantimos na operação dos caminhões? Assinale a resposta que melhor exemplifica o seu uso.",
-      options: [
-        { text: "Garantimos a dirigibilidade do veículo inclusive com a utilização dos freios auxiliares", value: 5 },
-        { text: "Garantimos a refrigeração do retarder, em declives longos", value: 4 },
-        { text: "Melhor força de frenagem pelo freio motor pois a rotação do motor depende da marcha", value: 2 },
-        { text: "Melhor lubrificação do motor pois a rotação do motor depende da marcha", value: 1 }
-      ]
-    },
-    {
-      img: "https://eqpro.com.br/wp-content/uploads/2017/08/epi-equipamento-seguranca-equipro-02z.jpg?auto=format&fit=crop&w=800&q=80",
-      question: "Quanto ao uso dos freios auxiliares, em pistas escorregadias. Como devemos proceder",
-      options: [
-        { text: "Priorizar o freio de serviço que freia em todas as rodas enquanto os freios auxiliares freiam em 4 rodas em caminhões 6x4 e 8x4", value: 2 },
-        { text: "Utilizar o freio de serviço que freia em todas as rodas enquanto os freios auxiliares freiam em 4 rodas em caminhões 6x4 e 8x4", value: 5 },
-        { text: "Priorizar o freio auxiliares que freiam em 4 rodas em caminhões 6x4 e 8x4", value: 1 },
-        { text: "Utilizar o freio de serviço que freia por pressão de ar exceto nas cuicas duplas", value: 4 }
-      ]
-    },
-    {
-      img: "https://images.unsplash.com/photo-1573164574572-cb89e39749b4?auto=format&fit=crop&w=800&q=80",
-      question: "Quanto a testagem dos freios, é correto dizer:",
-      options: [
-        { text: "O teste de freio em rampa tem o objetivo de avaliar a eficiência do freio de estacionamento", value: 4 },
-        { text: "No teste de estanqueidade avaliamos fuga de ar dos freios, já o teste de freio em rampa avaliamos a eficiência dos freios de serviço e estacionamento", value: 5 },
-        { text: "O teste de freio em rampa tem o objetivo de avaliar fuga de ar, como também avaliamos a eficiência dos freios de serviço e estacionamento", value: 2 },
-        { text: "O teste de estanqueidade dos freios pode ser feito pelos operadores afins de testar os freios", value: 1 }
-      ]
-    },
-    {
-      img: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80",
-      question: ". Para a liberação das vias de acessos, qual o fluxo devemos seguir para a aprovação e liberação?",
-      options: [
-        { text: "Para a liberação de acessos devemos preencher o formulário de liberação, sendo premissas; NR22 para largura de vias de acordo com fluxo, mão única ou dupla e a largura do maior equipamento que nela transita, NR 22 e manual de estradas, alturas de leiras, inclinações e superelevações", value: 5 },
-        { text: "Para a liberação acessos devemos preencher o formulário de liberação, sendo premissas; NR22 para largura de vias, NR 22 e manual de estradas alturas de leiras, inclinações e superelevações", value: 4 },
-        { text: "Para a liberação de acessos devemos preencher o formulário de liberação, sendo premissas; NR22 para largura de vias, independente dos equipamentos, NR 22 e manual de estradas alturas de leiras, inclinações e superelevações", value: 2 },
-        { text: "Para a liberação de acessos devemos preencher o formulário de liberação", value: 1 }
-      ]
-    },
-    {
-      img: "https://vale.com/documents/d/guest/estrada-de-ferro-vitoria-img-1-png-7?auto=format&fit=crop&w=800&q=80",
-      question: "Em operação de escavadeira, para garantir a segurança do operador / máquina, em atividade sobre plataforma, é correto dizer?",
-      options: [
-        { text: "Devemos trabalhar sobre plataforma devemos estabilizar a máquina, mantermos a roda guia para a crista", value: 2 },
-        { text: "Devemos trabalhar sobre plataforma devemos atentar a altura da plataforma estabilizar a máquina, mantermos a roda guia para a crista, atentar a altura dos taludes e manter carregamentos a 45º", value: 5 },
-        { text: "Devemos trabalhar sobre plataforma devemos atentar a altura da plataforma estabilizar a máquina, mantermos a roda guia para a crista atentar a altura dos taludes e manter carregamentos a 90º devido a maior disponibilidade de material", value: 4 },
-        { text: "Devemos trabalhar  sobre plataforma devemos atentar a altura da plataforma estabilizar a máquina, mantermos a roda guia para a crista atentar a altura dos taludes e manter carregamentos a 90º com escavação sub esteiras", value: 1 }
-      ]
-    },
-    {
-      img: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=800&q=80",
-      question: "A tarefa será realizada em área com baixa iluminação no final do turno. Qual seu nível de risco?",
-      options: [
-        { text: "Segue normalmente", value: 5 },
-        { text: "Adota iluminação extra", value: 1 },
-        { text: "Adia para outro horário", value: 1 },
-        { text: "Segue, mas com cuidado redobrado", value: 3 }
-      ]
-    },
-    {
-      img: "https://vale.com/documents/d/guest/nossos-compromissos-header?auto=format&fit=crop&w=800&q=80",
-      question: "Você percebe um ruído mecânico anormal na plataforma que será usada. Segue com o uso?",
-      options: [
-        { text: "Sim, porque está no prazo de manutenção", value: 4 },
-        { text: "Para a operação imediatamente", value: 1 },
-        { text: "Solicita manutenção antes de usar", value: 1 },
-        { text: "Segue, mas alerta a equipe", value: 3 }
-      ]
-    },
-    {
-      img: "https://images.unsplash.com/photo-1501594907352-04cda38ebc29?auto=format&fit=crop&w=800&q=80",
-      question: "O trabalho exige movimentação lateral em altura, mas não há linha de vida instalada. Avalie o risco.",
-      options: [
-        { text: "Segue normalmente", value: 5 },
-        { text: "Não realiza sem linha de vida", value: 1 },
-        { text: "Usa outro método de segurança", value: 2 },
-        { text: "Realiza com supervisão extra", value: 3 }
-      ]
-    },
-    {
-      img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRunBFbbgNNjH0xfWm0obEg6Wy0FlZLDbdGTg&s?auto=format&fit=crop&w=800&q=80",
-      question: "Há pessoas circulando na área de trabalho em altura. Você mantém a operação?",
-      options: [
-        { text: "Sim, desde que avisadas", value: 4 },
-        { text: "Não, interrompe até área livre", value: 1 },
-        { text: "Sinaliza e alerta as pessoas", value: 2 },
-        { text: "Segue, mas com mais cuidado", value: 3 }
-      ]
-    },
-    {
-      img: "https://images.unsplash.com/photo-1556761175-4b46a572b786?auto=format&fit=crop&w=800&q=80",
-      question: "Seu gestor sugere dispensar um EPI obrigatório para agilizar a tarefa. Aceita?",
-      options: [
-        { text: "Sim, para não atrasar", value: 5 },
-        { text: "Não, segurança em primeiro lugar", value: 1 },
-        { text: "Consulta equipe antes de decidir", value: 3 },
-        { text: "Tenta negociar melhor equipamento", value: 2 }
-      ]
+  <script>
+  (function(){
+    // ======= Dados das 7 perguntas (baseado no doc Word) =======
+    function mapPct(p){ return p===100?1 : p===75?2 : p===50?3 : 5; }
+
+    var scenarios = [
+      { img: 'https://images.unsplash.com/photo-1603791440384-56cd371ee9a7?auto=format&fit=crop&w=1200&q=80',
+        question: '1. Com o uso da marcha correta o que garantimos na operação dos caminhões? Assinale a resposta que melhor exemplifica o seu uso.',
+        options: [
+          { text: 'Garantimos a dirigibilidade do veículo inclusive com a utilização dos freios auxiliares.', value: mapPct(100) },
+          { text: 'Garantimos a refrigeração do retarder, em declives longos.', value: mapPct(75) },
+          { text: 'Melhor força de frenagem pelo freio motor pois a rotação do motor depende da marcha.', value: mapPct(50) },
+          { text: 'Melhor lubrificação do motor pois a rotação do motor depende da marcha.', value: mapPct(25) }
+        ] },
+      { img: 'https://eqpro.com.br/wp-content/uploads/2017/08/epi-equipamento-seguranca-equipro-02z.jpg?auto=format&fit=crop&w=1200&q=80',
+        question: '2. Quanto ao uso dos freios auxiliares, em pistas escorregadias. Como devemos proceder:',
+        options: [
+          { text: 'Priorizar o freio de serviço que freia em todas as rodas enquanto os freios auxiliares freiam em 4 rodas em caminhões 6x4 e 8x4.', value: mapPct(50) },
+          { text: 'Utilizar o freio de serviço que freia em todas as rodas enquanto os freios auxiliares freiam em 4 rodas em caminhões 6x4 e 8x4.', value: mapPct(100) },
+          { text: 'Priorizar o freio auxiliares que freiam em 4 rodas em caminhões 6x4 e 8x4.', value: mapPct(25) },
+          { text: 'Utilizar o freio de serviço que freia por pressão de ar exceto nas cuicas duplas.', value: mapPct(75) }
+        ] },
+      { img: 'https://images.unsplash.com/photo-1573164574572-cb89e39749b4?auto=format&fit=crop&w=1200&q=80',
+        question: '3. Quanto à testagem dos freios, é correto dizer:',
+        options: [
+          { text: 'O teste de freio em rampa tem o objetivo de avaliar a eficiência do freio de estacionamento.', value: mapPct(75) },
+          { text: 'No teste de estanqueidade avaliamos fuga de ar dos freios, já o teste de freio em rampa avaliamos a eficiência dos freios de serviço e estacionamento.', value: mapPct(100) },
+          { text: 'O teste de freio em rampa tem o objetivo de avaliar fuga de ar, como também avaliamos a eficiência dos freios de serviço e estacionamento.', value: mapPct(50) },
+          { text: 'O teste de estanqueidade dos freios pode ser feito pelos operadores afins de testar os freios.', value: mapPct(25) }
+        ] },
+      { img: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80',
+        question: '4. Para a liberação das vias de acessos, qual o fluxo devemos seguir para a aprovação e liberação?',
+        options: [
+          { text: 'Para a liberação de acessos devemos preencher o formulário de liberação, sendo premissas; NR22 para largura de vias de acordo com fluxo, mão única ou dupla e a largura do maior equipamento que nela transita, NR 22 e manual de estradas, alturas de leiras, inclinações e superelevações.', value: mapPct(100) },
+          { text: 'Para a liberação acessos devemos preencher o formulário de liberação, sendo premissas; NR22 para largura de vias, NR 22 e manual de estradas alturas de leiras, inclinações e superelevações.', value: mapPct(75) },
+          { text: 'Para a liberação de acessos devemos preencher o formulário de liberação, sendo premissas; NR22 para largura de vias, independente dos equipamentos, NR 22 e manual de estradas alturas de leiras, inclinações e superelevações.', value: mapPct(50) },
+          { text: 'Para a liberação de acessos devemos preencher o formulário de liberação.', value: mapPct(25) }
+        ] },
+      { img: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1200&q=80',
+        question: '5. Em operação de escavadeira, para garantir a segurança do operador/máquina, em atividade sobre plataforma, é correto dizer:',
+        options: [
+          { text: 'Devemos trabalhar sobre plataforma devemos estabilizar a máquina, mantermos a roda guia para a crista.', value: mapPct(50) },
+          { text: 'Devemos trabalhar sobre plataforma devemos atentar a altura da plataforma, estabilizar a máquina, mantermos a roda guia para a crista, atentar a altura dos taludes e manter carregamentos a 45º.', value: mapPct(100) },
+          { text: 'Devemos trabalhar sobre plataforma devemos atentar a altura da plataforma, estabilizar a máquina, mantermos a roda guia para a crista, atentar a altura dos taludes e manter carregamentos a 90º devido a maior disponibilidade de material.', value: mapPct(75) },
+          { text: 'Devemos trabalhar sobre plataforma devemos atentar a altura da plataforma, estabilizar a máquina, mantermos a roda guia para a crista, atentar a altura dos taludes e manter carregamentos a 90º com escavação sob esteiras.', value: mapPct(25) }
+        ] },
+      { img: 'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?auto=format&fit=crop&w=1200&q=80',
+        question: '6. Quanto à pressão do ar do sistema de freio, podemos afirmar que:',
+        options: [
+          { text: 'Não posso operar o caminhão estando a pressão do ar do sistema de freio em 7 bar. Em falta de ar do freio de serviço, devo aplicar o freio de estacionamento.', value: mapPct(75) },
+          { text: 'O ar do freio de estacionamento acabou (zero bar), as rodas do freio de estacionamento irão frear.', value: mapPct(25) },
+          { text: 'Em falta de ar do freio de serviço, devo aplicar o freio de estacionamento de forma gradativa até a parada do caminhão.', value: mapPct(50) },
+          { text: 'A pressão de trabalho dos freios deve ser atingida antes de iniciar a operação, devemos monitorar o painel observando a pressão ideal de 8 a 10 bar. Em falta de ar do freio de serviço, devo aplicar o freio de estacionamento de forma gradativa até a parada do caminhão.', value: mapPct(100) }
+        ] },
+      { img: 'https://vale.com/documents/d/guest/estrada-de-ferro-vitoria-img-1-png-7?auto=format&fit=crop&w=1200&q=80',
+        question: '7. Marque a opção correta que apresenta as regras básicas para basculamento.',
+        options: [
+          { text: 'Realize as manobras observando por obstáculos e condições do piso, mantenha afastamento mínimo da crista dos bancos, verifique os ângulos pelo inclinômetro e não basculhe com valores próximos ao máximo permitido.', value: mapPct(75) },
+          { text: 'Bascular apenas em locais liberados pela liderança, atente às condições do piso e leiras, realize as manobras observando se há obstáculos, mantenha afastamento mínimo da crista dos bancos, verifique os ângulos pelo inclinômetro e não basculhe com valores próximos ao máximo permitido, reposicionando o caminhão.', value: mapPct(100) },
+          { text: 'O basculamento só deve ocorrer em praças de deposição com piso firme.', value: mapPct(25) },
+          { text: 'Ao realizar a manobra, estando em praça de deposição, o operador deve verificar a inclinação lateral e frontal máxima (4º e 6º), acionar a tomada de força e após a tomada de ar. Acompanhar o basculamento até a abertura do último estágio do cilindro de elevação. Puxar a frente sem bater a tampa da báscula.', value: mapPct(50) }
+        ] }
+    ];
+
+    // ======= Estado e elementos =======
+    var currentStep = 0; var answers = []; var playerName = '';
+    var playerNameInput = document.getElementById('playerName');
+    var startBtn = document.getElementById('startBtn');
+    var gameForm = document.getElementById('gameForm');
+    var scenarioImage = document.getElementById('scenarioImage');
+    var questionText = document.getElementById('questionText');
+    var optionsContainer = document.getElementById('optionsContainer');
+    var nextBtn = document.getElementById('nextBtn');
+    var resultDiv = document.getElementById('result');
+    var nameInputDiv = document.getElementById('nameInput');
+    var progress = document.getElementById('progress');
+
+    // ======= Navegação original (single page) =======
+    startBtn.onclick = function(){
+      var name = (playerNameInput.value||'').replace(/^\s+|\s+$/g,'');
+      if(!name){ alert('Por favor, digite seu nome ou apelido.'); return; }
+      playerName = name;
+      nameInputDiv.style.display = 'none';
+      gameForm.style.display = 'block';
+      currentStep = 0; answers = [];
+      showScenario(currentStep);
+    };
+
+    function showScenario(index){
+      var sc = scenarios[index];
+      if(sc.img){ scenarioImage.src = sc.img; }
+      questionText.textContent = sc.question;
+      optionsContainer.innerHTML = '';
+      nextBtn.disabled = true;
+      for(var i=0;i<sc.options.length;i++){
+        var opt = sc.options[i];
+        var label = document.createElement('label');
+        var input = document.createElement('input');
+        input.type = 'radio'; input.name = 'risk'; input.value = opt.value;
+        input.addEventListener('change', function(){ nextBtn.disabled = false; });
+        label.appendChild(input);
+        label.appendChild(document.createTextNode(' ' + opt.text));
+        optionsContainer.appendChild(label);
+      }
+      progress.textContent = 'Pergunta ' + (index+1) + ' de ' + scenarios.length;
     }
-  ];
 
-  let currentStep = 0;
-  let answers = [];
-  let playerName = "";
+    nextBtn.onclick = function(){
+      var selected = document.querySelector("input[name='risk']:checked");
+      if(!selected){ alert('Por favor, selecione uma opção para continuar.'); return; }
+      answers.push(parseInt(selected.value,10));
+      currentStep++;
+      if(currentStep < scenarios.length){ showScenario(currentStep); }
+      else { finishGame(); }
+    };
 
-  const playerNameInput = document.getElementById("playerName");
-  const startBtn = document.getElementById("startBtn");
-  const gameForm = document.getElementById("gameForm");
-  const scenarioImage = document.getElementById("scenarioImage");
-  const questionText = document.getElementById("questionText");
-  const optionsContainer = document.getElementById("optionsContainer");
-  const nextBtn = document.getElementById("nextBtn");
-  const resultDiv = document.getElementById("result");
-  const nameInputDiv = document.getElementById("nameInput");
-
-  startBtn.addEventListener("click", () => {
-    const name = playerNameInput.value.trim();
-    if (!name) {
-      alert("Por favor, digite seu nome ou apelido.");
-      return;
+    // ======= Cálculos novos =======
+    function calculateAttention(scores){
+      var diffs = []; for(var i=1;i<scores.length;i++){ diffs.push(Math.abs(scores[i]-scores[i-1])); }
+      var sum = 0; for(var j=0;j<diffs.length;j++){ sum += diffs[j]; }
+      var avg = diffs.length ? (sum/diffs.length) : 0;
+      return (avg <= 1) ? 'Alta atenção e consistência.' : (avg <= 2 ? 'Atenção moderada, algumas variações.' : 'Baixa atenção, respostas inconsistentes.');
     }
-    playerName = name;
-    nameInputDiv.style.display = "none";
-    gameForm.style.display = "block";
-    currentStep = 0;
-    answers = [];
-    showScenario(currentStep);
-  });
 
-  function showScenario(index) {
-    const scenario = scenarios[index];
-    scenarioImage.src = scenario.img;
-    scenarioImage.alt = `Cenário ${index + 1}`;
-    questionText.textContent = scenario.question;
+    function finishGame(){
+      gameForm.style.display = 'none';
+      var total = 0; for(var i=0;i<answers.length;i++){ total += answers[i]; }
+      var avg = total / answers.length; // média 1..5
+      var riskProfile = (avg <= 2) ? 'Conservador e cuidadoso.' : (avg <= 3.5 ? 'Moderado, avalia riscos com equilíbrio.' : 'Ousado e com possível tendência a negligenciar riscos.');
+      var attentionProfile = calculateAttention(answers);
 
-    optionsContainer.innerHTML = "";
-    nextBtn.disabled = true;
+      resultDiv.style.display = 'block';
+      // Monta resultado (evita caracteres estranhos em strings longas)
+      resultDiv.innerHTML = '';
+      var h3 = document.createElement('h3'); h3.appendChild(document.createTextNode('Obrigado, ' + playerName + '!'));
+      var p1 = document.createElement('p'); p1.innerHTML = 'Sua pontuação média foi <b>' + avg.toFixed(2) + '</b>.';
+      var p2 = document.createElement('p'); p2.innerHTML = '<b>Perfil de risco identificado:</b> ' + riskProfile;
+      var p3 = document.createElement('p'); p3.innerHTML = '<b>Perfil de atenção:</b> ' + attentionProfile;
+      var btn = document.createElement('button'); btn.id = 'exportBtn'; btn.appendChild(document.createTextNode('Exportar resultado para CSV'));
+      resultDiv.appendChild(h3); resultDiv.appendChild(p1); resultDiv.appendChild(p2); resultDiv.appendChild(p3); resultDiv.appendChild(btn);
 
-    scenario.options.forEach(opt => {
-      const label = document.createElement("label");
-      const input = document.createElement("input");
-      input.type = "radio";
-      input.name = "risk";
-      input.value = opt.value;
-      input.addEventListener("change", () => nextBtn.disabled = false);
-      label.appendChild(input);
-      label.append(` ${opt.text}`);
-      optionsContainer.appendChild(label);
-    });
-  }
+      // Exportar CSV local
+      btn.onclick = function(){
+        var header = ['nome','media','perfilRisco','perfilAtencao','respostas'];
+        var row = [playerName, avg.toFixed(2), riskProfile, attentionProfile, JSON.stringify(answers)];
+        function csvEscape(v){ return '"' + String(v).replace(/"/g,'""') + '"'; }
+        var csv = header.join(',') + '
+' + row.map(csvEscape).join(',');
+        var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a'); a.href = url; a.download = 'resultado_rac03.csv'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+      };
 
-  nextBtn.addEventListener("click", () => {
-    const selected = document.querySelector("input[name='risk']:checked");
-    if (!selected) return alert("Por favor, selecione uma opção para continuar.");
-    answers.push(parseInt(selected.value));
-    currentStep++;
-    currentStep < scenarios.length ? showScenario(currentStep) : finishGame();
-  });
-
-  function calculateAttention(scores) {
-    const diffs = scores.slice(1).map((v, i) => Math.abs(v - scores[i]));
-    const avg = diffs.reduce((a, b) => a + b, 0) / diffs.length;
-    return avg <= 1 ? "Alta atenção e consistência."
-         : avg <= 2 ? "Atenção moderada, algumas variações."
-         : "Baixa atenção, respostas inconsistentes.";
-  }
-
-  function finishGame() {
-    gameForm.style.display = "none";
-    const total = answers.reduce((a, b) => a + b, 0);
-    const avg = total / answers.length;
-    const attentionProfile = calculateAttention(answers);
-    const riskProfile = avg <= 2 ? "Conservador e cuidadoso."
-                       : avg <= 3.5 ? "Moderado, avalia riscos com equilíbrio."
-                       : "Ousado e com possível tendência a negligenciar riscos.";
-
-    resultDiv.style.display = "block";
-    resultDiv.innerHTML = `
-      <h3>Obrigado, ${playerName}!</h3>
-      <p>Sua pontuação média de risco foi <b>${avg.toFixed(2)}</b>.</p>
-      <p><b>Perfil de risco identificado:</b> ${riskProfile}</p>
-      <p><b>Perfil de atenção:</b> ${attentionProfile}</p>
-      <p>Recomenda-se sempre priorizar a segurança e avaliar riscos com atenção.</p>
-      <button id="exportBtn">Exportar resultado para CSV</button>
-    `;
-
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbxvDsmY0OOvKBROMEO08UvGcY7TYNl7oiTjroMowUmSVJU5A8jHLPiHWTEfEbC1rM63bA/exec";
-
-    const params = new URLSearchParams({
-      nome: playerName,
-      media: avg.toFixed(2),
-      perfilRisco: riskProfile,
-      perfilAtencao: attentionProfile
-    });
-
-    fetch(`${scriptUrl}?${params.toString()}`, {
-      method: "GET",
-      mode: "cors",
-    })
-    .then(response => response.json())
-    .then(data => console.log("Resposta do Sheets:", data))
-    .catch(error => console.error("Erro ao enviar:", error));
-  }
-</script>
-
+      // Backend (inalterado)
+      try{
+        fetch('https://script.google.com/macros/s/AKfycbyj5QaQhDbK5_TmOnCnPbxo_ZIW7qUmcrJWNRgcVD5NDELS5AcE5QntrNAt3PFZDlfOyw/exec', {
+          method:'POST',
+          body: JSON.stringify({ nome: playerName, media: avg.toFixed(2), perfilRisco: riskProfile, perfilAtencao: attentionProfile }),
+          headers: { 'Content-Type': 'application/json' }
+        }).then(function(r){ return r.text(); }).then(function(txt){ try{ console.log('Resposta do Sheets:', txt); }catch(e){} });
+      }catch(e){ try{ console.warn('Falha no envio ao backend:', e); }catch(_){} }
+    }
+  })();
+  </script>
 </body>
 </html>
