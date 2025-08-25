@@ -466,7 +466,7 @@
 
     // Enviar ao backend (Google Apps Script)
     try{
-     fetch('https://script.google.com/macros/s/AKfycbw_Spraer70nSqkNFu8BLZUCDhdhaaLqcjnqQ_wnRjpY5qGMY-wakGaU3wthdlp1XmIwg/exec', {
+      fetch('https://script.google.com/macros/s/AKfycbyj5QaQhDbK5_TmOnCnPbxo_ZIW7qUmcrJWNRgcVD5NDELS5AcE5QntrNAt3PFZDlfOyw/exec', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ nome: player, media: avg.toFixed(2), perfil: badge.t, risco: Math.round(riskPct), atencao: Math.round(attentionPct), velocidade: Math.round(speedPct), tempoMedioSeg: s.toFixed(1), respostas: answers })
       }).then(r=>r.text()).then(txt=>console.log('Sheets:', txt)).catch(()=>{});
@@ -496,3 +496,4 @@
 </script>
 </body>
 </html>
+
