@@ -1,0 +1,36 @@
+:root{
+  --bg:#f5f7fb; --fg:#1f2328; --muted:#6b7280; --card:#ffffff; --border:#e5e7eb;
+  --shadow:0 10px 15px rgba(17,24,39,0.06),0 4px 6px rgba(17,24,39,0.04);
+  --accent:#7c3aed; --blue:#54aeff; --green:#22c55e; --lilac:#c297ff; --yellow:#facc15;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--fg);background:var(--bg)}
+.topbar{display:flex;align-items:center;gap:12px;padding:10px 16px;background:#fff;border-bottom:1px solid var(--border);box-shadow:var(--shadow)}
+.topbar h1{font-size:16px;margin:0}
+.topbar .icon{border:none;background:transparent;cursor:pointer}
+.topbar .icons{margin-left:auto;display:flex;gap:12px;color:#9ca3af}
+.container{max-width:1200px;margin:24px auto;padding:0 16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:16px}
+.card-title{font-weight:600;margin-bottom:10px}
+.toolbar{display:flex;gap:16px;align-items:flex-start}
+.field{display:flex;flex-direction:column;gap:6px;min-width:220px}
+.field small{color:var(--muted)}
+.field.actions{justify-content:flex-end}
+button{padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:#fff;cursor:pointer}
+button:hover{background:#f9fafb}
+select{min-width:220px;padding:8px;border:1px solid var(--border);border-radius:8px;background:#fff}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:16px 0}
+.grid-2{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin:16px 0}
+@media (max-width:960px){.grid-3{grid-template-columns:1fr} .grid-2{grid-template-columns:1fr}}
+.legend{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.sw{width:12px;height:12px;border-radius:3px;border:1px solid var(--border);display:inline-block}
+.sw-blue{background:var(--blue)}
+.sw-green{background:#7ee787}
+.sw-lilac{background:var(--lilac)}
+.sw-yellow{background:var(--yellow)}
+.muted{color:var(--muted)}
+.vis4d{width:100%;height:300px;background:#fff;border:1px solid var(--border);border-radius:10px;position:relative}
+.tooltip{position:absolute;pointer-events:none;background:#111;color:#fff;font-size:12px;padding:6px 8px;border-radius:6px;opacity:0;transform:translate(-50%,-120%);white-space:nowrap}
+.timeline{margin:0;padding:0 0 0 18px;list-style:decimal}
+.timeline li{margin:8px 0;padding:8px;border-left:3px solid var(--accent);background:#faf7ff;border-radius:8px}
+.map{height:320px;border:1px solid var(--border);border-radius:10px}
