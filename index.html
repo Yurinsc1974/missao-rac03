@@ -1,106 +1,509 @@
-<!doctype html>
-<html lang="pt-BR">
+<!DOCTYPE html>
+<html lang="pt-br">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Projects Overview</title>
-  <link rel="stylesheet" href="css/style.css">
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous"/>
-  <meta http-equiv="Cache-Control" content="no-store" />
+  <title>Missão RAC 03 — Quiz (Acerto x Risco)</title>
+  <style>
+    :root{ --bg:#0b1220; --card:#111a2b; --muted:#a4b1cd; --text:#eaf1ff; --accent:#4f9cff; --accent-2:#22d3ee; --good:#22c55e; --warn:#f59e0b; --bad:#ef4444; --shadow: 0 10px 30px rgba(0,0,0,.35); --radius:14px; }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{
+      margin:0; font:400 16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,'Helvetica Neue',Arial,'Noto Sans',sans-serif;
+      color:var(--text);
+      background:radial-gradient(1200px 800px at 10% -10%, #173057 0%, #0b1220 50%, #090f1a 100%),
+                 url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1200&auto=format&fit=crop') center/cover fixed no-repeat;
+    }
+    .wrap{ max-width:1100px; margin:0 auto; padding:40px 20px 80px; }
+    header{ display:flex; align-items:center; gap:12px; margin-bottom:22px; }
+    .logo{ width:42px; height:42px; border-radius:10px; background:linear-gradient(135deg,var(--accent),var(--accent-2)); display:grid; place-items:center; box-shadow:var(--shadow); }
+    .logo span{font-weight:700}
+    h1{ font-size:24px; margin:0; letter-spacing:.2px }
+    .card{ background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01)); border:1px solid rgba(255,255,255,.08); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden }
+    #intro{ padding:28px; display:grid; grid-template-columns: 1.2fr .8fr; gap:20px; align-items:center }
+    #intro .lead{ font-size:18px; color:var(--muted) }
+    #intro .panel{ background:var(--card); border-radius:12px; padding:20px; }
+    label{ display:block; font-weight:600; margin-bottom:8px }
+    input[type=text]{ width:100%; padding:12px 14px; border-radius:10px; border:1px solid rgba(255,255,255,.15); background:#0d1526; color:var(--text); outline:none }
+    .actions{ display:flex; gap:12px; margin-top:14px }
+    button{ appearance:none; border:0; border-radius:10px; padding:12px 18px; color:#06101f; font-weight:700; cursor:pointer }
+    .btn-primary{ background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:#06101f }
+    .btn-secondary{ background:rgba(255,255,255,.08); color:var(--text) }
+    #game{ display:none; } 
+    .game-grid{ display:grid; grid-template-columns: 1.1fr .9fr; gap:20px }
+    .scene{ position:relative; height:520px; border-radius:var(--radius); overflow:hidden; background:#111; }
+    .scene img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:brightness(.5) }
+    .scene .progress{ position:absolute; top:14px; left:14px; right:14px; height:10px; border-radius:8px; background:rgba(255,255,255,.12); overflow:hidden; border:1px solid rgba(255,255,255,.15) }
+    .scene .bar{ height:100%; width:0%; background:linear-gradient(90deg,var(--accent),var(--accent-2)); transition:width .35s ease }
+    .scene .step{ position:absolute; top:36px; left:16px; font-size:12px; color:#d0dcf5 }
+    .qa{ background:var(--card); border-radius:var(--radius); padding:20px; display:grid; grid-template-rows: auto 1fr auto; height:520px }
+    .question{ font-size:20px; font-weight:700; margin:2px 0 10px } 
+    .options{ display:grid; gap:10px; overflow:auto; padding-right:6px }
+    .opt{ display:flex; align-items:start; gap:10px; padding:12px; border:1px solid rgba(255,255,255,.12); border-radius:12px; background:#0e1729; cursor:pointer; transition:transform .05s ease, border-color .2s ease }
+    .opt:hover{ border-color:rgba(255,255,255,.3) } 
+    .opt input{ transform:scale(1.2); margin-top:2px }
+    .qa-footer{ display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:12px }
+    .pill{ background:rgba(255,255,255,.08); color:var(--muted); font-size:12px; padding:6px 10px; border-radius:999px }
+    #result{ display:none } 
+    .result-wrap{ display:grid; grid-template-columns: 1.1fr .9fr; gap:20px }
+    .hero{ background:linear-gradient(135deg,#0f1b33,#0b1426); border:1px solid rgba(255,255,255,.08); border-radius:var(--radius); padding:22px }
+    .metrics{ display:grid; grid-template-columns: repeat(2, 1fr); gap:14px; margin-top:10px }
+    .metric{ background:#0e1628; border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:14px; display:grid; grid-template-columns: 100px 1fr; gap:12px; align-items:center }
+    .metric h4{ margin:0 0 6px; font-size:14px; color:#cbd6ee } 
+    .metric p{ margin:0; color:var(--muted); font-size:13px }
+    .viz{ width:100px; height:100px } 
+    .panel{ background:var(--card); border:1px solid rgba(255,255,255,.08); border-radius:var(--radius); padding:18px }
+    .list{ margin:0; padding-left:18px; color:var(--muted) } 
+    .result-actions{ display:flex; gap:12px; margin-top:14px; align-items:center; flex-wrap:wrap; }
+    .status-badge{ display:inline-block; padding:6px 10px; border-radius:999px; font-weight:700; font-size:12px; }
+    .status-ok{ background:rgba(34,197,94,.2); color:#34d399; border:1px solid rgba(34,197,94,.35); }
+    .status-warn{ background:rgba(245,158,11,.2); color:#fbbf24; border:1px solid rgba(245,158,11,.35); }
+    .status-err{ background:rgba(239,68,68,.2); color:#f87171; border:1px solid rgba(239,68,68,.35); }
+    @media (max-width: 900px){ 
+      #intro{ grid-template-columns: 1fr; } 
+      .game-grid, .result-wrap{ grid-template-columns: 1fr; } 
+      .scene, .qa{ height:auto } 
+    }
+    .badge{ display:inline-block; padding:3px 8px; border-radius:999px; font-weight:700; font-size:12px }
+    .muted{ color:var(--muted); font-size:12px; }
+  </style>
 </head>
 <body>
-  <header class="topbar">
-    <button class="icon">☰</button>
-    <h1>MY DASHBOARD</h1>
-    <nav class="icons">
-      <span>🔒</span><span>👤</span><span>⚙️</span>
-    </nav>
-  </header>
-
-  <main class="container">
-    <h2>Projects Overview</h2>
-
-    <!-- Slicers (filtros) -->
-    <section class="card toolbar">
-      <div class="field">
-        <label>Área</label>
-        <select id="selArea" multiple size="4"></select>
-        <small>Dica: use Ctrl/⌘ para multi‑seleção</small>
+  <div class="wrap">
+    <header>
+      <div class="logo"><span>R3</span></div>
+      <div>
+        <h1>Missão RAC 03 — Quiz (Acerto x Risco)</h1>
+        <div style="color:var(--muted); font-size:14px">Responda situações reais de operação e segurança. Ao final, você verá seu <b>Índice de Acerto</b>, <b>Perfil de Risco</b> e <b>Atenção</b>.</div>
       </div>
-      <div class="field">
-        <label>Data (ou Marco)</label>
-        <select id="selData"></select>
+    </header>
+
+    <!-- Intro -->
+    <section id="intro" class="card">
+      <div>
+        <p class="lead">Digite seu nome para começar. Leia cada questão e escolha a alternativa que melhor representa a conduta segura e correta.</p>
+        <ul class="list">
+          <li>Use o mouse ou as teclas <kbd>1</kbd>–<kbd>4</kbd> para marcar.</li>
+          <li>Pressione <kbd>Enter</kbd> para avançar e <kbd>Esc</kbd> para voltar.</li>
+          <li>Ao concluir, o resultado será enviado automaticamente.</li>
+        </ul>
       </div>
-      <div class="field actions">
-        <label>&nbsp;</label>
-        <button id="btnClear">Limpar filtros</button>
-        <button id="btnReload">Recarregar</button>
+      <div class="panel">
+        <label for="playerName">Seu nome ou apelido</label>
+        <input id="playerName" type="text" placeholder="Ex.: Maria S." />
+        <div class="actions">
+          <button id="btnStart" class="btn-primary">Iniciar</button>
+        </div>
+        <div class="muted">Este treinamento não coleta informações sensíveis; registramos apenas seu resultado para fins de aprendizagem.</div>
       </div>
     </section>
 
-    <!-- Linha com 3 gráficos -->
-    <section class="grid-3">
-      <div class="card">
-        <div class="card-title">Previsto x Real x Masterplan</div>
-        <canvas id="chartPRM" height="160"></canvas>
+    <!-- Game -->
+    <section id="game" class="game-grid">
+      <div class="scene card">
+        <div class="progress"><div class="bar" id="progressBar"></div></div>
+        <div class="step" id="stepText"></div>
+        <img id="sceneImg" alt="Cenário" src=""/>
       </div>
-      <div class="card">
-        <div class="card-title">Curva S (Cumulativa)</div>
-        <canvas id="chartCurvaS" height="160"></canvas>
-      </div>
-      <div class="card">
-        <div class="card-title">Desvio vs Custo</div>
-        <canvas id="chartDesvioCusto" height="160"></canvas>
-      </div>
-    </section>
-
-    <!-- Card 4D -->
-    <section class="card">
-      <div class="card-title">Simulação 4D por Área</div>
-      <div class="legend">
-        <span class="sw sw-blue"></span> Previsto
-        <span class="sw sw-green"></span> Real (adiantado/dentro)
-        <span class="sw sw-lilac"></span> Masterplan
-        <span class="sw sw-yellow"></span> Atraso
-        <div class="stretch"></div>
-        <button id="btnPlay">▶️ Play</button>
-        <input id="rngStep" type="range" min="0" max="0" step="1" value="0" />
-        <span id="lblStep" class="muted">–</span>
-      </div>
-      <div id="vis4d" class="vis4d">
-        <div id="tt" class="tooltip"></div>
+      <div class="qa card">
+        <div>
+          <div class="pill" id="topic">Cenário</div>
+          <div class="question" id="questionText"></div>
+        </div>
+        <div class="options" id="options"></div>
+        <div class="qa-footer">
+          <span class="pill" id="timer">00:00</span>
+          <div>
+            <button id="btnBack" class="btn-secondary">Voltar</button>
+            <button id="btnNext" class="btn-primary" disabled>Próximo</button>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- Fatos relevantes + Mapa -->
-    <section class="grid-2">
-      <div class="card">
-        <div class="card-title">Mapa de Projetos</div>
-        <div id="map" class="map"></div>
-      </div>
-      <div class="card">
-        <div class="card-title">Fatos Relevantes</div>
-        <ol id="timeline" class="timeline"></ol>
+    <!-- Result -->
+    <section id="result">
+      <div class="result-wrap">
+        <div class="hero">
+          <h2 id="thanks"></h2>
+          <p class="lead" id="summary"></p>
+          <div class="metrics">
+            <div class="metric">
+              <svg class="viz" viewBox="0 0 100 100" id="gaugeScore"></svg>
+              <div>
+                <h4>Pontuação (%)</h4>
+                <p>% de pontos obtidos em relação ao máximo.</p>
+              </div>
+            </div>
+            <div class="metric">
+              <svg class="viz" viewBox="0 0 100 100" id="gaugeRisk"></svg>
+              <div>
+                <h4>Perfil de Risco</h4>
+                <p>Classificação do comportamento de risco escolhido.</p>
+              </div>
+            </div>
+            <div class="metric">
+              <svg class="viz" viewBox="0 0 100 100" id="gaugeAttention"></svg>
+              <div>
+                <h4>Atenção</h4>
+                <p>Consistência das escolhas ao longo do quiz.</p>
+              </div>
+            </div>
+            <div class="metric">
+              <svg class="viz" viewBox="0 0 100 100" id="gaugeSpeed"></svg>
+              <div>
+                <h4>Velocidade Média</h4>
+                <p>Tempo médio por pergunta.</p>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:10px">
+            <svg class="viz" viewBox="0 0 100 100" id="radar"></svg>
+            <span class="pill">Radar: Acerto / Atenção / Velocidade</span>
+          </div>
+
+          <div class="result-actions">
+            <button id="btnCSV" class="btn-primary">Exportar CSV</button>
+            <button id="btnReiniciar" class="btn-secondary">Jogar de novo</button>
+            <span id="sendStatus" class="status-badge status-warn" style="display:none;">Enviando resultado...</span>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Suas respostas</h3>
+          <ol id="answersList" class="list"></ol>
+        </div>
       </div>
     </section>
+  </div>
 
-    <details class="card">
-      <summary>Preview (debug)</summary>
-      <pre id="log">Aguardando…</pre>
-    </details>
-  </main>
+  <script>
+  (function(){
+    // URL da Web App (versão /exec)
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbyxmt_ERuldGmdP8lZjMhMiWua71Ixah_vWgGFAA4IVcb5D_uqGZC-C_ex-SqA9uVnMBg/exec';
 
-  <!-- Bibliotecas sem SRI -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" crossorigin="anonymous" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous" defer></script>
-  <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous" defer></script>
+    // Pesos por pergunta (ajuste se quiser valorizar alguma)
+    const WEIGHTS = [1,1,1,1,1,1,1,1]; // 8 perguntas
+    const MAX_PER_Q = 5;               // máximo por pergunta
 
-  <!-- App -->
-  <script src="js/loadExcel.js" defer></script>
-  <script src="js/vis4d.js" defer></script>
-  <script src="js/map.js" defer></script>
-  <script src="js/app.js" defer></script>
+    // Conversão % -> pontos (0..5) e risco correspondente (1..5)
+    const pctToPts  = p => (MAX_PER_Q * (p/100));       // 100=>5 ; 75=>3.75 ; 50=>2.5 ; 25=>1.25
+    const riskFromPct = p => (p>=100?1 : p>=75?2 : p>=50?3 : 5);
+
+    // ----------------- Base de Perguntas (percentuais por alternativa) -----------------
+    const rawScenarios = [
+      {
+        img: 'https://images.unsplash.com/photo-1603791440384-56cd371ee9a7?auto=format&fit=crop&w=1200&q=80',
+        topic:'Condução',
+        q: '1. Com o uso da marcha correta o que garantimos na operação dos caminhões? Assinale a resposta que melhor exemplifica o seu uso.',
+        opt: [
+          { t:'Garantimos a dirigibilidade do veículo inclusive com a utilização dos freios auxiliares.', pct:100 },
+          { t:'Garantimos a refrigeração do retarder, em declives longos.', pct:75 },
+          { t:'Melhor força de frenagem pelo freio motor pois a rotação do motor depende da marcha.', pct:50 },
+          { t:'Melhor lubrificação do motor pois a rotação do motor depende da marcha.', pct:25 },
+        ]
+      },
+      {
+        img: 'https://eqpro.com.br/wp-content/uploads/2017/08/epi-equipamento-seguranca-equipro-02z.jpg?auto=format&fit=crop&w=1200&q=80',
+        topic:'Frenagem',
+        q: '2. Quanto ao uso dos freios auxiliares, em pistas escorregadias. Como devemos proceder:',
+        opt: [
+          { t:'Priorizar o freio de serviço que freia em todas as rodas enquanto os freios auxiliares freiam em 4 rodas em caminhões 6x4 e 8x4.', pct:50 },
+          { t:'Utilizar o freio de serviço que freia em todas as rodas enquanto os freios auxiliares freiam em 4 rodas em caminhões 6x4 e 8x4.', pct:100 },
+          { t:'Priorizar o freio auxiliares que freiam em 4 rodas em caminhões 6x4 e 8x4.', pct:25 },
+          { t:'Utilizar o freio de serviço que freia por pressão de ar exceto nas cuicas duplas.', pct:75 },
+        ]
+      },
+      {
+        img: 'https://images.unsplash.com/photo-1573164574572-cb89e39749b4?auto=format&fit=crop&w=1200&q=80',
+        topic:'Testes',
+        q: '3. Quanto a testagem dos freios, é correto dizer:',
+        opt: [
+          { t:'O teste de freio em rampa tem o objetivo de avaliar a eficiência do freio de estacionamento.', pct:75 },
+          { t:'No teste de estanqueidade avaliamos fuga de ar dos freios, já o teste de freio em rampa avaliamos a eficiência dos freios de serviço e estacionamento.', pct:100 },
+          { t:'O teste de freio em rampa tem o objetivo de avaliar fuga de ar, como também avaliamos a eficiência dos freios de serviço e estacionamento.', pct:50 },
+          { t:'O teste de estanqueidade dos freios pode ser feito pelos operadores afins de testar os freios.', pct:25 },
+        ]
+      },
+      {
+        img: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80',
+        topic:'Vias de Acesso',
+        q: '4. Para a liberação das vias de acessos, qual o fluxo devemos seguir para a aprovação e liberação?',
+        opt: [
+          { t:'Para a liberação de acessos devemos preencher o formulário de liberação, sendo premissas; NR22 para largura de vias de acordo com fluxo, mão única ou dupla e a largura do maior equipamento que nela transita, NR 22 e manual de estradas, alturas de leiras, inclinações e superelevações.', pct:100 },
+          { t:'Para a liberação acessos devemos preencher o formulário de liberação, sendo premissas; NR22 para largura de vias, NR 22 e manual de estradas alturas de leiras, inclinações e superelevações.', pct:75 },
+          { t:'Para a liberação de acessos devemos preencher o formulário de liberação, sendo premissas; NR22 para largura de vias, independente dos equipamentos, NR 22 e manual de estradas alturas de leiras, inclinações e superelevações.', pct:50 },
+          { t:'Para a liberação de acessos devemos preencher o formulário de liberação.', pct:25 },
+        ]
+      },
+      {
+        img: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1200&q=80',
+        topic:'Escavadeira',
+        q: '5. Em operação de escavadeira, para garantir a segurança do operador/máquina, em atividade sobre plataforma, é correto dizer:',
+        opt: [
+          { t:'Devemos trabalhar sobre plataforma devemos estabilizar a máquina, mantermos a roda guia para a crista', pct:50 },
+          { t:'Devemos trabalhar sobre plataforma devemos atentar a altura da plataforma, estabilizar a máquina, mantermos a roda guia para a crista, atentar a altura dos taludes e manter carregamentos a 45º', pct:100 },
+          { t:'Devemos trabalhar sobre plataforma devemos atentar a altura da plataforma, estabilizar a máquina, mantermos a roda guia para a crista, atentar a altura dos taludes e manter carregamentos a 90º devido a maior disponibilidade de material', pct:75 },
+          { t:'Devemos trabalhar sobre plataforma devemos atentar a altura da plataforma, estabilizar a máquina, mantermos a roda guia para a crista, atentar a altura dos taludes e manter carregamentos a 90º com escavação sob esteiras', pct:25 },
+        ]
+      },
+      {
+        img: 'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?auto=format&fit=crop&w=1200&q=80',
+        topic:'Pressão de Ar',
+        q: '6. Quanto a pressão do ar do sistema de freio, podemos afirmar que:',
+        opt: [
+          { t:'Não posso operar o caminhão estando a pressão do ar do sistema de freio em 7 bar. Em falta de ar do freio de serviço, devo aplicar o freio de estacionamento.', pct:75 },
+          { t:'O ar do freio de estacionamento acabou (zero bar), as rodas do freio de estacionamento irão freiar.', pct:25 },
+          { t:'Em falta de ar do freio de serviço, devo aplicar o freio de estacionamento de forma gradativa até a parada do caminhão.', pct:50 },
+          { t:'A pressão de trabalho dos freios deve ser atingida antes de iniciar a operação, devemos monitorar o painel e observando a pressão sendo a pressão ideal de 8 a 10 bar. Em falta de ar do freio de serviço, devo aplicar o freio de estacionamento de forma gradativa até a parada do caminhão.', pct:100 },
+        ]
+      },
+      {
+        img: 'https://vale.com/documents/d/guest/estrada-de-ferro-vitoria-img-1-png-7?auto=format&fit=crop&w=1200&q=80',
+        topic:'Basculamento',
+        q: '7. Marque a opção correta que apresenta as regras básicas para basculamento.',
+        opt: [
+          { t:'Realize as manobras observando por obstáculos e condições do piso, mantenha afastamento mínimo da crista dos bancos, verifique os ângulos pelo inclinômetro e não basculhe com valores próximo ao máximo permitido', pct:75 },
+          { t:'Bascular apenas em locais liberados pela liderança, atente as condições do piso e leiras, realiza as manobras observando se há obstáculos, mantenha afastamento mínimo da crista dos bancos, verifique os ângulos pelo inclinômetro e não basculhe com valores próximo ao máximo permitido, reposicionando o caminhão.', pct:100 },
+          { t:'O basculamento só deve ocorrer em praças de deposição com piso firme', pct:25 },
+          { t:'Ao realizar a manobra, estando em praça de deposição, o operador deve verificar a inclinação lateral e frontal máxima (4º e 6º), acionar a tomada de força e após a tomada de ar. Acompanhar o basculamento até a abertura do último estágio do cilindro de elevação. Puxar a frente sem bater a tampa da báscula.', pct:50 },
+        ]
+      },
+      {
+        img: 'https://images.unsplash.com/photo-1501706362039-c06b2d715385?auto=format&fit=crop&w=1200&q=80',
+        topic:'Condição Insegura',
+        q: '8. Você está passando por problemas pessoais em sua casa, resolve vir trabalhar para se distrair do problema e a fadiga é detectada durante a operação do caminhão. Você deverá:',
+        opt: [
+          { t:'Parar o caminhão em local seguro e informar a liderança imediatamente.', pct:100 },
+          { t:'Marcar no emociograma e aguardar entrarem em contato com você.', pct:25 },
+          { t:'Procurar o Pitstop parando o equipamento em local seguro.', pct:75 },
+          { t:'Realizar o direito de recusa.', pct:50 },
+        ]
+      },
+    ];
+
+    const scenarios = rawScenarios.map(sc => ({
+      ...sc,
+      opt: sc.opt.map(o => ({ ...o, pts: pctToPts(o.pct), risk: riskFromPct(o.pct) }))
+    }));
+
+    // ----------------- Estado/elementos -----------------
+    let player = '', step = 0;
+    let answers = new Array(scenarios.length).fill(null); // {idx, pts, risk}
+    let times = new Array(scenarios.length).fill(0);
+    let t0 = 0, raf = 0;
+    let sentOnce = false;
+
+    const $=s=>document.querySelector(s);
+    const intro=$('#intro'), game=$('#game'), result=$('#result');
+    const nameInput=$('#playerName'), btnStart=$('#btnStart');
+    const btnBack=$('#btnBack'), btnNext=$('#btnNext'), progressBar=$('#progressBar');
+    const stepText=$('#stepText'), sceneImg=$('#sceneImg'), topic=$('#topic');
+    const questionText=$('#questionText'), options=$('#options'), timer=$('#timer');
+    const thanks=$('#thanks'), summary=$('#summary'), answersList=$('#answersList');
+    const btnCSV=$('#btnCSV'), btnReiniciar=$('#btnReiniciar');
+    const sendStatus=$('#sendStatus');
+
+    const fmtTime=ms=>{const s=Math.round(ms/1000);const m=String(Math.floor(s/60)).padStart(2,'0');const ss=String(s%60).padStart(2,'0');return `${m}:${ss}`;};
+
+    function drawDonut(id,percent,color){
+      const el=document.getElementById(id);
+      const p=Math.max(0,Math.min(100,percent));
+      const r=42,c=2*Math.PI*r,off=c*(1-p/100);
+      el.innerHTML=`<circle cx="50" cy="50" r="46" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="8"/>
+<circle cx="50" cy="50" r="${r}" fill="none" stroke="${color}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 50 50)"/>
+<text x="50" y="54" text-anchor="middle" font-size="18" fill="#eaf1ff" font-weight="700">${Math.round(p)}%</text>`;
+    }
+
+    function drawRadar(id, axes){
+      const el=document.getElementById(id),cx=50,cy=50,r=40,ang=[-90,30,150].map(a=>a*Math.PI/180);
+      const pts=axes.map((v,i)=>{const rr=r*v;return [cx+rr*Math.cos(ang[i]),cy+rr*Math.sin(ang[i])]});
+      const grid=[0.33,0.66,1].map(g=>{const gpts=ang.map(a=>`${cx+r*g*Math.cos(a)},${cy+r*g*Math.sin(a)}`);return `<polygon points="${gpts.join(' ')}" fill="none" stroke="rgba(255,255,255,.12)"/>`;}).join('');
+      const poly=`<polygon points="${pts.map(p=>p.join(',')).join(' ')}" fill="rgba(79,156,255,.25)" stroke="var(--accent)"/>`;
+      const labels=['Acerto','Atenção','Velocidade'].map((t,i)=>{const rr=r*1.15,x=cx+rr*Math.cos(ang[i]),y=cy+rr*Math.sin(ang[i]);return `<text x="${x}" y="${y}" text-anchor="middle" font-size="10" fill="#cbd6ee">${t}</text>`}).join('');
+      el.innerHTML=`<g>${grid}${poly}${labels}</g>`;
+    }
+
+    function updateTimer(){ timer.textContent=fmtTime(performance.now()-t0); raf=requestAnimationFrame(updateTimer); }
+
+    function riskCategory(avg){
+      if(avg <= 2) return {cat:'Perfil Conservador', extra:'', c:'var(--good)'};
+      if(avg <= 3.5) return {cat:'Perfil Moderado', extra:'', c:'var(--warn)'};
+      return {cat:'Perfil Ousado', extra:(avg >= 4.25 ? ' — com possível tendência a negligenciar riscos.' : ''), c:'var(--bad)'};
+    }
+
+    function attentionLabel(p){ if(p>66) return 'Alta atenção e consistência.'; if(p>33) return 'Atenção moderada, algumas variações.'; return 'Baixa atenção, respostas inconsistentes.'; }
+
+    function start(){
+      const n=(nameInput.value??'').trim();
+      if(!n){alert('Por favor, informe seu nome.');return;}
+      player=n; step=0; sentOnce=false;
+      answers=new Array(scenarios.length).fill(null);
+      times=new Array(scenarios.length).fill(0);
+      intro.style.display='none'; result.style.display='none'; game.style.display='grid';
+      render();
+    }
+
+    function render(){
+      const total=scenarios.length,sc=scenarios[step];
+      sceneImg.src=sc.img; stepText.textContent=`Pergunta ${step+1} de ${total}`;
+      progressBar.style.width=`${(step/total)*100}%`;
+      topic.textContent=sc.topic; questionText.textContent=sc.q; options.innerHTML='';
+      sc.opt.forEach((o,idx)=>{
+        const id=`opt_${step}_${idx}`;
+        const li=document.createElement('label'); li.className='opt'; li.setAttribute('for',id);
+        const radio=document.createElement('input'); radio.type='radio'; radio.name='opt'; radio.id=id; radio.dataset.idx=idx;
+        if(answers[step]?.idx===idx) radio.checked=true;
+        radio.addEventListener('change',()=>btnNext.disabled=false);
+        const span=document.createElement('div'); span.innerHTML=`<b>${idx+1})</b> ${o.t}`;
+        li.appendChild(radio); li.appendChild(span); options.appendChild(li);
+      });
+      btnNext.disabled=(answers[step]==null); btnBack.disabled=(step===0);
+      cancelAnimationFrame(raf); t0=performance.now(); updateTimer();
+    }
+
+    function next(){
+      const sel=document.querySelector("input[name='opt']:checked");
+      if(!sel){alert('Selecione uma opção para continuar.');return;}
+      const dt=performance.now()-t0; times[step]+=dt;
+      const sc=scenarios[step]; const idx=parseInt(sel.dataset.idx,10); const choice=sc.opt[idx];
+      answers[step]={idx, pts: choice.pts, risk: choice.risk};
+      step++; (step<scenarios.length)?render():finish();
+    }
+
+    function back(){ if(step===0) return; const dt=performance.now()-t0; times[step]+=dt; step--; render(); }
+
+    function calc(){
+      const rows=answers.filter(v=>v!=null);
+      const n=rows.length;
+      const wsum = WEIGHTS.slice(0,n).reduce((a,b)=>a+b,0) || 1;
+
+      let totalPoints = 0;
+      for (let i=0; i<n; i++) totalPoints += WEIGHTS[i] * rows[i].pts;
+      const maxPoints = MAX_PER_Q * wsum;
+
+      const scorePct = maxPoints ? (100 * totalPoints / maxPoints) : 0; // UI
+      const mediaGeral5 = totalPoints / wsum;                           // 0..5
+
+      const avgRisk = n ? (rows.reduce((a,b)=>a+b.risk,0)/n) : 1;
+      const diffs=[]; for(let i=1;i<n;i++) diffs.push(Math.abs(rows[i].risk-rows[i-1].risk));
+      const avgDiff=diffs.length?(diffs.reduce((a,b)=>a+b,0)/diffs.length):0;
+      const attentionPct=Math.max(0,100-(avgDiff/4)*100);
+
+      const avgMs=times.slice(0,n).reduce((a,b)=>a+b,0)/(n||1);
+      const s=avgMs/1000;
+      const speedPct=Math.max(0,Math.min(100,100*((45-Math.min(45,Math.max(6,s)))/(45-6))));
+      const riskPct=Math.max(0,Math.min(100,((avgRisk-1)/4)*100));
+
+      return {scorePct,mediaGeral5,avgRisk,riskPct,attentionPct,speedPct,avgDiff,s,total:n};
+    }
+
+    function finish(){
+      cancelAnimationFrame(raf);
+      game.style.display='none'; result.style.display='block';
+      const {scorePct,mediaGeral5,avgRisk,riskPct,attentionPct,speedPct,avgDiff,s,total}=calc();
+      const rc=riskCategory(avgRisk); const attTxt=attentionLabel(attentionPct); const riskText=rc.cat + (rc.extra||'');
+
+      thanks.textContent=`Obrigado, ${player}! Aqui está seu resultado.`;
+      summary.innerHTML=`Pontos (% do máximo): <span class="badge" style="background:${scorePct>=70?'var(--good)':scorePct>=40?'var(--warn)':'var(--bad)'}; color:#06101f">${scorePct.toFixed(0)}%</span><br>
+        Média (0–5, ponderada): <b>${mediaGeral5.toFixed(2)}</b><br>
+        Risco: <b style="color:${rc.c}">${riskText}</b> (média ${avgRisk.toFixed(2)}).<br>
+        Em atividades: <b>${attTxt}</b> (variação média ${avgDiff.toFixed(2)}). Tempo médio por pergunta: <b>${s.toFixed(1)}s</b>.`;
+
+      drawDonut('gaugeScore',scorePct,scorePct>=70?'var(--good)':scorePct>=40?'var(--warn)':'var(--bad)');
+      drawDonut('gaugeRisk',riskPct,rc.c);
+      drawDonut('gaugeAttention',attentionPct,attentionPct>66?'var(--good)':attentionPct>33?'var(--warn)':'var(--bad)');
+      drawDonut('gaugeSpeed',speedPct,speedPct>66?'var(--good)':speedPct>33?'var(--warn)':'var(--bad)');
+      drawRadar('radar',[scorePct/100,attentionPct/100,speedPct/100]);
+
+      // Lista de respostas
+      answersList.innerHTML='';
+      scenarios.forEach((sc,i)=>{
+        const a=answers[i]; const li=document.createElement('li');
+        if(!a){
+          li.innerHTML=`<b>${sc.q}</b><br><span style="color:var(--muted)">Sem resposta.</span>`;
+        }else{
+          const o=sc.opt[a.idx];
+          li.innerHTML=`<b>${sc.q}</b><br><span style="color:var(--muted)">Sua resposta: ${o.t} — <b>${o.pct}%</b> (<b>${o.pts.toFixed(2)}</b>/5) · risco <b>${o.risk}</b>/5</span>`;
+        }
+        answersList.appendChild(li);
+      });
+
+      // Export CSV
+      btnCSV.onclick=function(){
+        const header=['nome','pontos_%','media_0a5_ponderada','perfil_risco_texto','perfil_atencao_texto','tempo_medio_s','respostas_idx'];
+        const row=[player,scorePct.toFixed(0),mediaGeral5.toFixed(2),riskText,attTxt,s.toFixed(1),JSON.stringify(answers.map(a=>a?a.idx:null))];
+        const csv=header.join(',')+'\n'+row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',');
+        const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}); const url=URL.createObjectURL(blob);
+        const a=document.createElement('a'); a.href=url; a.download='resultado_rac03_quiz.csv'; document.body.appendChild(a); a.click();
+        document.body.removeChild(a); URL.revokeObjectURL(url);
+      };
+
+      // Envio automático (única vez) — envia Média 0..5
+      enviarResultado({
+        nome: player,
+        mediaGeral: mediaGeral5,
+        perfilRisco: riskText,
+        perfilAtencao: attTxt
+      });
+    }
+
+    async function enviarResultado({nome, mediaGeral, perfilRisco, perfilAtencao}){
+      try {
+        if (sentOnce) return;
+        const dedupKey = `rac03_sent_${nome}_${new Date().toDateString()}`;
+        if (localStorage.getItem(dedupKey)) { sentOnce = true; return; }
+
+        sentOnce = true;
+        sendStatus.className = 'status-badge status-warn';
+        sendStatus.textContent = 'Enviando resultado...';
+        sendStatus.style.display = 'inline-block';
+
+        const payload = new URLSearchParams({
+          Nome: nome,
+          MediaGeral: String(Number(mediaGeral).toFixed(2)), // 0..5 com 2 casas
+          PerfilRisco: perfilRisco,
+          PerfilAtencao: perfilAtencao
+        });
+
+        const r = await fetch(GAS_URL, { method:'POST', body: payload, redirect:'follow' });
+
+        let ok = false;
+        try { const json = await r.json(); ok = json?.status === 'OK'; }
+        catch(_) { ok = r.ok; }
+
+        if (ok) {
+          localStorage.setItem(dedupKey, '1');
+          sendStatus.className = 'status-badge status-ok';
+          sendStatus.textContent = 'Resultado enviado!';
+        } else {
+          sendStatus.className = 'status-badge status-err';
+          sendStatus.textContent = 'Falha no envio (sem confirmação)';
+        }
+      } catch (err) {
+        console.warn('Falha envio', err);
+        sendStatus.className = 'status-badge status-err';
+        sendStatus.textContent = 'Falha no envio';
+        sentOnce = false;
+      }
+    }
+
+    // ----------------- Eventos (definidos UMA vez) -----------------
+    btnStart.addEventListener('click', start);
+    btnNext.addEventListener('click', next);
+    btnBack.addEventListener('click', back);
+
+    document.addEventListener('keydown', e=>{
+      if (game.style.display!=='grid') return;
+      if (e.key>='1' && e.key<='4'){
+        const i=parseInt(e.key,10)-1;
+        const input=document.querySelectorAll("input[name='opt']")[i];
+        if(input){ input.checked=true; btnNext.disabled=false; }
+      }
+      if (e.key==='Enter') next();
+      if (e.key==='Escape') back();
+    });
+  })();
+  </script>
 </body>
 </html>
