@@ -132,7 +132,7 @@
               <svg class="viz" viewBox="0 0 100 100" id="gaugeScore"></svg>
               <div>
                 <h4>Índice de Acerto</h4>
-                <p>% de respostas corretas.</p>
+                <p>% do total de pontos obtidos.</p>
               </div>
             </div>
             <div class="metric">
@@ -180,64 +180,117 @@
 
   <script>
   (function(){
-    // URL da Web App (versão /exec) - sua implantação mais recente
+    // URL da Web App (versão /exec)
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbyxmt_ERuldGmdP8lZjMhMiWua71Ixah_vWgGFAA4IVcb5D_uqGZC-C_ex-SqA9uVnMBg/exec';
 
-    // Base de perguntas (acerto binário + risco 1..5)
-    const scenarios = [
-      { img: 'https://images.unsplash.com/photo-1603791440384-56cd371ee9a7?auto=format&fit=crop&w=1200&q=80', topic:'Condução', q: '1. Com o uso da marcha correta o que garantimos na operação dos caminhões? Assinale a resposta que melhor exemplifica o seu uso.', opt: [
-        { t:'Garantimos a dirigibilidade do veículo inclusive com a utilização dos freios auxiliares.', grade:0, risk:2 },
-        { t:'Garantimos a refrigeração do retarder, em declives longos.', grade:0, risk:3 },
-        { t:'Melhor força de frenagem pelo freio motor pois a rotação do motor depende da marcha.', grade:1, risk:1 },
-        { t:'Melhor lubrificação do motor pois a rotação do motor depende da marcha.', grade:0, risk:5 },
-      ]},
-      { img: 'https://eqpro.com.br/wp-content/uploads/2017/08/epi-equipamento-seguranca-equipro-02z.jpg?auto=format&fit=crop&w=1200&q=80', topic:'Frenagem', q: '2. Quanto ao uso dos freios auxiliares, em pistas escorregadias. Como devemos proceder:', opt: [
-        { t:'Priorizar o freio de serviço que freia em todas as rodas enquanto os freios auxiliares freiam em 4 rodas em caminhões 6x4 e 8x4.', grade:1, risk:2 },
-        { t:'Utilizar o freio de serviço que freia em todas as rodas enquanto os freios auxiliares freiam em 4 rodas em caminhões 6x4 e 8x4.', grade:1, risk:1 },
-        { t:'Priorizar o freio auxiliares que freiam em 4 rodas em caminhões 6x4 e 8x4.', grade:0, risk:5 },
-        { t:'Utilizar o freio de serviço que freia por pressão de ar exceto nas cuicas duplas.', grade:0, risk:3 },
-      ]},
-      { img: 'https://images.unsplash.com/photo-1573164574572-cb89e39749b4?auto=format&fit=crop&w=1200&q=80', topic:'Testes', q: '3. Quanto à testagem dos freios, é correto dizer:', opt: [
-        { t:'O teste de freio em rampa tem o objetivo de avaliar a eficiência do freio de estacionamento.', grade:0, risk:3 },
-        { t:'No teste de estanqueidade avaliamos fuga de ar dos freios, já o teste de freio em rampa avaliamos a eficiência dos freios de serviço e estacionamento.', grade:1, risk:1 },
-        { t:'O teste de freio em rampa tem o objetivo de avaliar fuga de ar, como também avaliamos a eficiência dos freios de serviço e estacionamento.', grade:0, risk:4 },
-        { t:'O teste de estanqueidade dos freios pode ser feito pelos operadores afins de testar os freios.', grade:0, risk:3 },
-      ]},
-      { img: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80', topic:'Vias de Acesso', q: '4. Para a liberação das vias de acessos, qual o fluxo devemos seguir para a aprovação e liberação?', opt: [
-        { t:'Preencher o formulário, premissas: NR22 (largura conforme fluxo e maior equipamento), mão única/dupla, manual de estradas (leiras, inclinações e superelevações).', grade:1, risk:1 },
-        { t:'Preencher o formulário, premissas: NR22 (largura), manual de estradas (leiras, inclinações e superelevações).', grade:0, risk:2 },
-        { t:'Preencher o formulário, premissas: NR22 (largura), independente do equipamento, manual de estradas (leiras, inclinações e superelevações).', grade:0, risk:4 },
-        { t:'Apenas preencher o formulário de liberação.', grade:0, risk:5 },
-      ]},
-      { img: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1200&q=80', topic:'Escavadeira', q: '5. Em operação de escavadeira, para garantir a segurança do operador/máquina, em atividade sobre plataforma, é correto dizer:', opt: [
-        { t:'Estabilizar a máquina; roda guia para a crista.', grade:0, risk:2 },
-        { t:'Atentar à altura da plataforma; estabilizar; roda guia para a crista; atentar aos taludes; carregamentos a 45º.', grade:1, risk:1 },
-        { t:'Mesmo que acima + carregamentos a 90º pela maior disponibilidade de material.', grade:0, risk:4 },
-        { t:'Mesmo que acima + carregamentos a 90º com escavação sob esteiras.', grade:0, risk:5 },
-      ]},
-      { img: 'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?auto=format&fit=crop&w=1200&q=80', topic:'Pressão de Ar', q: '6. Quanto à pressão do ar do sistema de freio, podemos afirmar que:', opt: [
-        { t:'Não operar com 7 bar; falta de ar no freio de serviço → aplicar o de estacionamento.', grade:0, risk:3 },
-        { t:'Ar do freio de estacionamento acabou (0 bar) → rodas de estacionamento irão frear.', grade:0, risk:3 },
-        { t:'Falta de ar do freio de serviço → aplicar o de estacionamento gradativamente até parar.', grade:0, risk:3 },
-        { t:'Pressão ideal 8–10 bar antes de operar; monitorar painel; falta de ar no serviço → aplicar estacionamento gradativamente.', grade:1, risk:1 },
-      ]},
-      { img: 'https://vale.com/documents/d/guest/estrada-de-ferro-vitoria-img-1-png-7?auto=format&fit=crop&w=1200&q=80', topic:'Basculamento', q: '7. Marque a opção correta que apresenta as regras básicas para basculamento.', opt: [
-        { t:'Observar obstáculos e piso; afastamento da crista; verificar inclinômetro e não bascular próximo ao máximo permitido.', grade:0, risk:2 },
-        { t:'Somente em locais liberados; observar piso e leiras; afastamento da crista; checar inclinômetro; evitar valores próximos do máximo, reposicionando o caminhão.', grade:1, risk:1 },
-        { t:'Basculamento só em praças de deposição com piso firme.', grade:0, risk:3 },
-        { t:'Verificar inclinação (4º lateral / 6º frontal); acionar tomada de força e de ar; acompanhar até último estágio; puxar a frente sem bater a tampa.', grade:0, risk:3 },
-      ]},
-      { img: 'https://images.unsplash.com/photo-1501706362039-c06b2d715385?auto=format&fit=crop&w=1200&q=80', topic:'Condição Insegura', q: '8. Diante de uma condição insegura durante a operação, qual ação você toma?', opt: [
-        { t:'Parar o caminhão em local seguro e informar a liderança imediatamente.', grade:1, risk:1 },
-        { t:'Marcar no emociograma e aguardar entrarem em contato com você.', grade:0, risk:4 },
-        { t:'Procurar o Pitstop parando o equipamento em local seguro.', grade:1, risk:1 },
-        { t:'Realizar o direito de recusa.', grade:1, risk:1 },
-      ]},
-    ];
+    // Pesos por pergunta (se quiser valorizar alguma, ajuste aqui)
+    const WEIGHTS = [1,1,1,1,1,1,1,1]; // 8 perguntas
+    const MAX_PER_Q = 5;               // máximo por pergunta (5)
 
-    // Estado/elementos --------------------------------------------------------
+    // Conversão % -> pontos (0..5)
+    const pctToPts = (p) => (MAX_PER_Q * (p/100));
+
+    // Atribuição de risco alinhada ao percentual (100->1, 75->2, 50->3, 25->5)
+    const riskFromPct = (p) => (p>=100?1 : p>=75?2 : p>=50?3 : 5);
+
+    // Base de perguntas: texto + percentuais por alternativa (conforme você passou)
+    const scenarios = [
+      {
+        img: 'https://images.unsplash.com/photo-1603791440384-56cd371ee9a7?auto=format&fit=crop&w=1200&q=80',
+        topic:'Condução',
+        q: '1. Com o uso da marcha correta o que garantimos na operação dos caminhões? Assinale a resposta que melhor exemplifica o seu uso.',
+        opt: [
+          { t:'Garantimos a dirigibilidade do veículo inclusive com a utilização dos freios auxiliares.', pct:100 },
+          { t:'Garantimos a refrigeração do retarder, em declives longos.', pct:75 },
+          { t:'Melhor força de frenagem pelo freio motor pois a rotação do motor depende da marcha.', pct:50 },
+          { t:'Melhor lubrificação do motor pois a rotação do motor depende da marcha.', pct:25 },
+        ]
+      },
+      {
+        img: 'https://eqpro.com.br/wp-content/uploads/2017/08/epi-equipamento-seguranca-equipro-02z.jpg?auto=format&fit=crop&w=1200&q=80',
+        topic:'Frenagem',
+        q: '2. Quanto ao uso dos freios auxiliares, em pistas escorregadias. Como devemos proceder:',
+        opt: [
+          { t:'Priorizar o freio de serviço que freia em todas as rodas enquanto os freios auxiliares freiam em 4 rodas em caminhões 6x4 e 8x4.', pct:50 },
+          { t:'Utilizar o freio de serviço que freia em todas as rodas enquanto os freios auxiliares freiam em 4 rodas em caminhões 6x4 e 8x4.', pct:100 },
+          { t:'Priorizar o freio auxiliares que freiam em 4 rodas em caminhões 6x4 e 8x4.', pct:25 },
+          { t:'Utilizar o freio de serviço que freia por pressão de ar exceto nas cuicas duplas.', pct:75 },
+        ]
+      },
+      {
+        img: 'https://images.unsplash.com/photo-1573164574572-cb89e39749b4?auto=format&fit=crop&w=1200&q=80',
+        topic:'Testes',
+        q: '3. Quanto a testagem dos freios, é correto dizer:',
+        opt: [
+          { t:'O teste de freio em rampa tem o objetivo de avaliar a eficiência do freio de estacionamento.', pct:75 },
+          { t:'No teste de estanqueidade avaliamos fuga de ar dos freios, já o teste de freio em rampa avaliamos a eficiência dos freios de serviço e estacionamento.', pct:100 },
+          { t:'O teste de freio em rampa tem o objetivo de avaliar fuga de ar, como também avaliamos a eficiência dos freios de serviço e estacionamento.', pct:50 },
+          { t:'O teste de estanqueidade dos freios pode ser feito pelos operadores afins de testar os freios.', pct:25 },
+        ]
+      },
+      {
+        img: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80',
+        topic:'Vias de Acesso',
+        q: '4. Para a liberação das vias de acessos, qual o fluxo devemos seguir para a aprovação e liberação?',
+        opt: [
+          { t:'Para a liberação de acessos devemos preencher o formulário de liberação, sendo premissas; NR22 para largura de vias de acordo com fluxo, mão única ou dupla e a largura do maior equipamento que nela transita, NR 22 e manual de estradas, alturas de leiras, inclinações e superelevações.', pct:100 },
+          { t:'Para a liberação acessos devemos preencher o formulário de liberação, sendo premissas; NR22 para largura de vias, NR 22 e manual de estradas alturas de leiras, inclinações e superelevações.', pct:75 },
+          { t:'Para a liberação de acessos devemos preencher o formulário de liberação, sendo premissas; NR22 para largura de vias, independente dos equipamentos, NR 22 e manual de estradas alturas de leiras, inclinações e superelevações.', pct:50 },
+          { t:'Para a liberação de acessos devemos preencher o formulário de liberação.', pct:25 },
+        ]
+      },
+      {
+        img: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1200&q=80',
+        topic:'Escavadeira',
+        q: '5. Em operação de escavadeira, para garantir a segurança do operador/máquina, em atividade sobre plataforma, é correto dizer:',
+        opt: [
+          { t:'Devemos trabalhar sobre plataforma devemos estabilizar a máquina, mantermos a roda guia para a crista', pct:50 },
+          { t:'Devemos trabalhar sobre plataforma devemos atentar a altura da plataforma, estabilizar a máquina, mantermos a roda guia para a crista, atentar a altura dos taludes e manter carregamentos a 45º', pct:100 },
+          { t:'Devemos trabalhar sobre plataforma devemos atentar a altura da plataforma, estabilizar a máquina, mantermos a roda guia para a crista, atentar a altura dos taludes e manter carregamentos a 90º devido a maior disponibilidade de material', pct:75 },
+          { t:'Devemos trabalhar sobre plataforma devemos atentar a altura da plataforma, estabilizar a máquina, mantermos a roda guia para a crista, atentar a altura dos taludes e manter carregamentos a 90º com escavação sob esteiras', pct:25 },
+        ]
+      },
+      {
+        img: 'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?auto=format&fit=crop&w=1200&q=80',
+        topic:'Pressão de Ar',
+        q: '6. Quanto a pressão do ar do sistema de freio, podemos afirmar que:',
+        opt: [
+          { t:'Não posso operar o caminhão estando a pressão do ar do sistema de freio em 7 bar. Em falta de ar do freio de serviço, devo aplicar o freio de estacionamento.', pct:75 },
+          { t:'O ar do freio de estacionamento acabou (zero bar), as rodas do freio de estacionamento irão freiar.', pct:25 },
+          { t:'Em falta de ar do freio de serviço, devo aplicar o freio de estacionamento de forma gradativa até a parada do caminhão.', pct:50 },
+          { t:'A pressão de trabalho dos freios deve ser atingida antes de iniciar a operação, devemos monitorar o painel e observando a pressão sendo a pressão ideal de 8 a 10 bar. Em falta de ar do freio de serviço, devo aplicar o freio de estacionamento de forma gradativa até a parada do caminhão.', pct:100 },
+        ]
+      },
+      {
+        img: 'https://vale.com/documents/d/guest/estrada-de-ferro-vitoria-img-1-png-7?auto=format&fit=crop&w=1200&q=80',
+        topic:'Basculamento',
+        q: '7. Marque a opção correta que apresenta as regras básicas para basculamento.',
+        opt: [
+          { t:'Realize as manobras observando por obstáculos e condições do piso, mantenha afastamento mínimo da crista dos bancos, verifique os ângulos pelo inclinômetro e não basculhe com valores próximo ao máximo permitido', pct:75 },
+          { t:'Bascular apenas em locais liberados pela liderança, atente as condições do piso e leiras, realiza as manobras observando se há obstáculos, mantenha afastamento mínimo da crista dos bancos, verifique os ângulos pelo inclinômetro e não basculhe com valores próximo ao máximo permitido, reposicionando o caminhão.', pct:100 },
+          { t:'O basculamento só deve ocorrer em praças de deposição com piso firme', pct:25 },
+          { t:'Ao realizar a manobra, estando em praça de deposição, o operador deve verificar a inclinação lateral e frontal máxima (4º e 6º), acionar a tomada de força e após a tomada de ar. Acompanhar o basculamento até a abertura do último estágio do cilindro de elevação. Puxar a frente sem bater a tampa da báscula.', pct:50 },
+        ]
+      },
+      {
+        img: 'https://images.unsplash.com/photo-1501706362039-c06b2d715385?auto=format&fit=crop&w=1200&q=80',
+        topic:'Condição Insegura',
+        q: '8. Você está passando por problemas pessoais em sua casa, resolve vir trabalhar para se distrair do problema e a fadiga é detectada durante a operação do caminhão. Você deverá:',
+        opt: [
+          { t:'Parar o caminhão em local seguro e informar a liderança imediatamente.', pct:100 },
+          { t:'Marcar no emociograma e aguardar entrarem em contato com você.', pct:25 },
+          { t:'Procurar o Pitstop parando o equipamento em local seguro.', pct:75 },
+          { t:'Realizar o direito de recusa.', pct:50 },
+        ]
+      },
+    ].map(sc => ({
+      ...sc,
+      opt: sc.opt.map(o => ({ ...o, pts: pctToPts(o.pct), risk: riskFromPct(o.pct) }))
+    }));
+
+    // --- Estado/elementos ----------------------------------------------------
     let player = '', step = 0;
-    let answers = new Array(scenarios.length).fill(null);
+    let answers = new Array(scenarios.length).fill(null); // {idx, pts, risk}
     let times = new Array(scenarios.length).fill(0);
     let t0 = 0, raf = 0;
     let sentOnce = false; // evita múltiplos envios no mesmo resultado
@@ -314,7 +367,7 @@
       if(!sel){alert('Selecione uma opção para continuar.');return;}
       const dt=performance.now()-t0; times[step]+=dt;
       const sc=scenarios[step]; const idx=parseInt(sel.dataset.idx,10); const choice=sc.opt[idx];
-      answers[step]={grade:choice.grade,risk:choice.risk,idx};
+      answers[step]={idx, pts: choice.pts, risk: choice.risk};
       step++; (step<scenarios.length)?render():finish();
     }
 
@@ -323,27 +376,43 @@
     function calc(){
       const rows=answers.filter(v=>v!=null);
       const n=rows.length;
-      const correct=rows.reduce((a,b)=>a+(b.grade?1:0),0);
-      const scorePct=n?(100*correct/n):0;                  // MediaGeral enviada ao backend
-      const avgRisk=n?(rows.reduce((a,b)=>a+b.risk,0)/n):1;
+
+      // Pontos ponderados (por pergunta) e máximos
+      const wsum = WEIGHTS.slice(0,n).reduce((a,b)=>a+b,0) || 1;
+      let totalPoints = 0;
+      for (let i=0; i<n; i++){
+        totalPoints += WEIGHTS[i] * rows[i].pts; // pts já é 0..5
+      }
+      const maxPoints = MAX_PER_Q * wsum;
+
+      // Índice de “acerto” como % de pontos obtidos (coerente com a média 0..5)
+      const scorePct = maxPoints ? (100 * totalPoints / maxPoints) : 0;
+
+      // Média (0–5) ponderada por pergunta
+      const mediaGeral5 = totalPoints / wsum;
+
+      // Risco/Atenção/Velocidade (mesmas fórmulas)
+      const avgRisk = n ? (rows.reduce((a,b)=>a+b.risk,0)/n) : 1;
       const diffs=[]; for(let i=1;i<n;i++) diffs.push(Math.abs(rows[i].risk-rows[i-1].risk));
       const avgDiff=diffs.length?(diffs.reduce((a,b)=>a+b,0)/diffs.length):0;
-      const attentionPct=Math.max(0,100-(avgDiff/4)*100);  // 0..100 (consistência)
+      const attentionPct=Math.max(0,100-(avgDiff/4)*100);
       const avgMs=times.slice(0,n).reduce((a,b)=>a+b,0)/(n||1);
       const s=avgMs/1000;
       const speedPct=Math.max(0,Math.min(100,100*((45-Math.min(45,Math.max(6,s)))/(45-6))));
       const riskPct=Math.max(0,Math.min(100,((avgRisk-1)/4)*100));
-      return {scorePct,avgRisk,riskPct,attentionPct,speedPct,avgDiff,s,correct,total:n};
+
+      return {scorePct, mediaGeral5, avgRisk, riskPct, attentionPct, speedPct, avgDiff, s, total:n};
     }
 
     function finish(){
       cancelAnimationFrame(raf);
       game.style.display='none'; result.style.display='block';
-      const {scorePct,avgRisk,riskPct,attentionPct,speedPct,avgDiff,s,correct,total}=calc();
+      const {scorePct,mediaGeral5,avgRisk,riskPct,attentionPct,speedPct,avgDiff,s,total}=calc();
       const rc=riskCategory(avgRisk); const attTxt=attentionLabel(attentionPct); const riskText=rc.cat + rc.extra;
 
       thanks.textContent=`Obrigado, ${player}! Aqui está seu resultado.`;
-      summary.innerHTML=`Acertos: <b>${correct}/${total}</b> — <span class="badge" style="background:${scorePct>=70?'var(--good)':scorePct>=40?'var(--warn)':'var(--bad)'}; color:#06101f">${scorePct.toFixed(0)}%</span><br>
+      summary.innerHTML=`Pontos (% do máximo): <span class="badge" style="background:${scorePct>=70?'var(--good)':scorePct>=40?'var(--warn)':'var(--bad)'}; color:#06101f">${scorePct.toFixed(0)}%</span><br>
+        Média (0–5, ponderada): <b>${mediaGeral5.toFixed(2)}</b><br>
         Risco: <b style="color:${rc.c}">${riskText}</b> (média ${avgRisk.toFixed(2)}).<br>
         Em atividades: <b>${attTxt}</b> (variação média ${avgDiff.toFixed(2)}). Tempo médio por pergunta: <b>${s.toFixed(1)}s</b>.`;
 
@@ -353,42 +422,41 @@
       drawDonut('gaugeSpeed',speedPct,speedPct>66?'var(--good)':speedPct>33?'var(--warn)':'var(--bad)');
       drawRadar('radar',[scorePct/100,attentionPct/100,speedPct/100]);
 
-      // Lista de respostas
+      // Lista de respostas com pontuação por questão
       answersList.innerHTML='';
       scenarios.forEach((sc,i)=>{
-        const li=document.createElement('li'); const a=answers[i];
+        const a=answers[i]; const li=document.createElement('li');
         if(!a){
           li.innerHTML=`<b>${sc.q}</b><br><span style="color:var(--muted)">Sem resposta.</span>`;
-          answersList.appendChild(li); return;
+        }else{
+          const o=sc.opt[a.idx];
+          li.innerHTML=`<b>${sc.q}</b><br><span style="color:var(--muted)">Sua resposta: ${o.t} — <b>${o.pct}%</b> (<b>${o.pts.toFixed(2)}</b>/5) · risco <b>${o.risk}</b>/5</span>`;
         }
-        const o=sc.opt[a.idx]; const ok=o.grade?'✅ Correta':'❌ Incorreta';
-        li.innerHTML=`<b>${sc.q}</b><br><span style="color:var(--muted)">Sua resposta: ${o.t} <i>(risco ${o.risk}/5)</i> — <b>${ok}</b></span>`;
         answersList.appendChild(li);
       });
 
       // Export CSV
       btnCSV.onclick=function(){
-        const header=['nome','acertos','total','acerto_%','perfil_risco_texto','perfil_atencao_texto','tempo_medio_s','respostas_idx'];
-        const row=[player,correct,total,scorePct.toFixed(0),riskText,attTxt,s.toFixed(1),JSON.stringify(answers.map(a=>a?a.idx:null))];
+        const header=['nome','pontos_%','media_0a5_ponderada','perfil_risco_texto','perfil_atencao_texto','tempo_medio_s','respostas_idx'];
+        const row=[player,scorePct.toFixed(0),mediaGeral5.toFixed(2),riskText,attentionLabel(attentionPct),s.toFixed(1),JSON.stringify(answers.map(a=>a?a.idx:null))];
         const csv=header.join(',')+'\n'+row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',');
         const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}); const url=URL.createObjectURL(blob);
         const a=document.createElement('a'); a.href=url; a.download='resultado_rac03_quiz.csv'; document.body.appendChild(a); a.click();
         document.body.removeChild(a); URL.revokeObjectURL(url);
       };
 
-      // >>> Envio automático (uma única vez) <<<
+      // Envio automático (uma única vez) — envia Média 0..5
       enviarResultado({
         nome: player,
-        mediaGeral: Math.round(scorePct), // inteiro 0..100
+        mediaGeral: mediaGeral5,          // 0..5 (decimal)
         perfilRisco: riskText,
-        perfilAtencao: attTxt
+        perfilAtencao: attentionLabel(attentionPct)
       });
     }
 
     async function enviarResultado({nome, mediaGeral, perfilRisco, perfilAtencao}){
       try {
         if (sentOnce) return;
-        // Evita reenvio ao navegar no histórico/refresh pós-finalização
         const dedupKey = `rac03_sent_${nome}_${new Date().toDateString()}`;
         if (localStorage.getItem(dedupKey)) { sentOnce = true; return; }
 
@@ -399,25 +467,16 @@
 
         const payload = new URLSearchParams({
           Nome: nome,
-          MediaGeral: String(mediaGeral),
+          MediaGeral: String(Number(mediaGeral).toFixed(2)), // 0..5 com 2 casas
           PerfilRisco: perfilRisco,
           PerfilAtencao: perfilAtencao
         });
 
-        const r = await fetch(GAS_URL, {
-          method: 'POST',
-          body: payload,
-          redirect: 'follow'
-        });
+        const r = await fetch(GAS_URL, { method:'POST', body: payload, redirect:'follow' });
 
-        // Tenta ler resposta; se CORS bloquear, considera HTTP ok como sucesso
         let ok = false;
-        try {
-          const json = await r.json();
-          ok = json?.status === 'OK';
-        } catch(_) {
-          ok = r.ok;
-        }
+        try { const json = await r.json(); ok = json?.status === 'OK'; }
+        catch(_) { ok = r.ok; }
 
         if (ok) {
           localStorage.setItem(dedupKey, '1');
@@ -431,22 +490,27 @@
         console.warn('Falha envio', err);
         sendStatus.className = 'status-badge status-err';
         sendStatus.textContent = 'Falha no envio';
-        sentOnce = false; // permite nova tentativa manual (se implementada futuramente)
+        sentOnce = false;
       }
     }
 
     // Eventos
+    const btnStart=document.querySelector('#btnStart');
+    const btnDemo=document.querySelector('#btnDemo');
+    const btnNext=document.querySelector('#btnNext');
+    const btnBack=document.querySelector('#btnBack');
+
     btnStart.addEventListener('click',start);
-    btnDemo.addEventListener('click',()=>{ nameInput.value='Participante Demo'; start(); });
+    btnDemo.addEventListener('click',()=>{ document.querySelector('#playerName').value='Participante Demo'; start(); });
     btnNext.addEventListener('click',next);
     btnBack.addEventListener('click',back);
 
     document.addEventListener('keydown',e=>{
-      if(game.style.display!=='grid') return;
+      if(document.querySelector('#game').style.display!=='grid') return;
       if(e.key>='1'&&e.key<='4'){
         const i=parseInt(e.key,10)-1;
         const input=document.querySelectorAll("input[name='opt']")[i];
-        if(input){ input.checked=true; btnNext.disabled=false; }
+        if(input){ input.checked=true; document.querySelector('#btnNext').disabled=false; }
       }
       if(e.key==='Enter') next();
       if(e.key==='Escape') back();
