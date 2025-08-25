@@ -8,7 +8,7 @@
     :root{ --bg:#0b1220; --card:#111a2b; --muted:#a4b1cd; --text:#eaf1ff; --accent:#4f9cff; --accent-2:#22d3ee; --good:#22c55e; --warn:#f59e0b; --bad:#ef4444; --shadow: 0 10px 30px rgba(0,0,0,.35); --radius:14px; }
     *{box-sizing:border-box} html,body{height:100%}
     body{
-      margin:0; font:400 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+      margin:0; font:400 16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,'Helvetica Neue',Arial,'Noto Sans',sans-serif;
       color:var(--text);
       background:radial-gradient(1200px 800px at 10% -10%, #173057 0%, #0b1220 50%, #090f1a 100%),
                  url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1200&auto=format&fit=crop') center/cover fixed no-repeat;
@@ -92,7 +92,6 @@
         <input id="playerName" type="text" placeholder="Ex.: Maria S." />
         <div class="actions">
           <button id="btnStart" class="btn-primary">Iniciar</button>
-          <button id="btnDemo" class="btn-secondary" title="Preencher nome e começar">Demo</button>
         </div>
         <div class="muted">Este treinamento não coleta informações sensíveis; registramos apenas seu resultado para fins de aprendizagem.</div>
       </div>
@@ -131,8 +130,8 @@
             <div class="metric">
               <svg class="viz" viewBox="0 0 100 100" id="gaugeScore"></svg>
               <div>
-                <h4>Índice de Acerto</h4>
-                <p>% do total de pontos obtidos.</p>
+                <h4>Pontuação (%)</h4>
+                <p>% de pontos obtidos em relação ao máximo.</p>
               </div>
             </div>
             <div class="metric">
@@ -183,18 +182,16 @@
     // URL da Web App (versão /exec)
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbyxmt_ERuldGmdP8lZjMhMiWua71Ixah_vWgGFAA4IVcb5D_uqGZC-C_ex-SqA9uVnMBg/exec';
 
-    // Pesos por pergunta (se quiser valorizar alguma, ajuste aqui)
+    // Pesos por pergunta (ajuste se quiser valorizar alguma)
     const WEIGHTS = [1,1,1,1,1,1,1,1]; // 8 perguntas
-    const MAX_PER_Q = 5;               // máximo por pergunta (5)
+    const MAX_PER_Q = 5;               // máximo por pergunta
 
-    // Conversão % -> pontos (0..5)
-    const pctToPts = (p) => (MAX_PER_Q * (p/100));
+    // Conversão % -> pontos (0..5) e risco correspondente (1..5)
+    const pctToPts  = p => (MAX_PER_Q * (p/100));       // 100=>5 ; 75=>3.75 ; 50=>2.5 ; 25=>1.25
+    const riskFromPct = p => (p>=100?1 : p>=75?2 : p>=50?3 : 5);
 
-    // Atribuição de risco alinhada ao percentual (100->1, 75->2, 50->3, 25->5)
-    const riskFromPct = (p) => (p>=100?1 : p>=75?2 : p>=50?3 : 5);
-
-    // Base de perguntas: texto + percentuais por alternativa (conforme você passou)
-    const scenarios = [
+    // ----------------- Base de Perguntas (percentuais por alternativa) -----------------
+    const rawScenarios = [
       {
         img: 'https://images.unsplash.com/photo-1603791440384-56cd371ee9a7?auto=format&fit=crop&w=1200&q=80',
         topic:'Condução',
@@ -283,21 +280,23 @@
           { t:'Realizar o direito de recusa.', pct:50 },
         ]
       },
-    ].map(sc => ({
+    ];
+
+    const scenarios = rawScenarios.map(sc => ({
       ...sc,
       opt: sc.opt.map(o => ({ ...o, pts: pctToPts(o.pct), risk: riskFromPct(o.pct) }))
     }));
 
-    // --- Estado/elementos ----------------------------------------------------
+    // ----------------- Estado/elementos -----------------
     let player = '', step = 0;
     let answers = new Array(scenarios.length).fill(null); // {idx, pts, risk}
     let times = new Array(scenarios.length).fill(0);
     let t0 = 0, raf = 0;
-    let sentOnce = false; // evita múltiplos envios no mesmo resultado
+    let sentOnce = false;
 
     const $=s=>document.querySelector(s);
     const intro=$('#intro'), game=$('#game'), result=$('#result');
-    const nameInput=$('#playerName'), btnStart=$('#btnStart'), btnDemo=$('#btnDemo');
+    const nameInput=$('#playerName'), btnStart=$('#btnStart');
     const btnBack=$('#btnBack'), btnNext=$('#btnNext'), progressBar=$('#progressBar');
     const stepText=$('#stepText'), sceneImg=$('#sceneImg'), topic=$('#topic');
     const questionText=$('#questionText'), options=$('#options'), timer=$('#timer');
@@ -341,7 +340,8 @@
       player=n; step=0; sentOnce=false;
       answers=new Array(scenarios.length).fill(null);
       times=new Array(scenarios.length).fill(0);
-      intro.style.display='none'; result.style.display='none'; game.style.display='grid'; render();
+      intro.style.display='none'; result.style.display='none'; game.style.display='grid';
+      render();
     }
 
     function render(){
@@ -376,39 +376,33 @@
     function calc(){
       const rows=answers.filter(v=>v!=null);
       const n=rows.length;
-
-      // Pontos ponderados (por pergunta) e máximos
       const wsum = WEIGHTS.slice(0,n).reduce((a,b)=>a+b,0) || 1;
+
       let totalPoints = 0;
-      for (let i=0; i<n; i++){
-        totalPoints += WEIGHTS[i] * rows[i].pts; // pts já é 0..5
-      }
+      for (let i=0; i<n; i++) totalPoints += WEIGHTS[i] * rows[i].pts;
       const maxPoints = MAX_PER_Q * wsum;
 
-      // Índice de “acerto” como % de pontos obtidos (coerente com a média 0..5)
-      const scorePct = maxPoints ? (100 * totalPoints / maxPoints) : 0;
+      const scorePct = maxPoints ? (100 * totalPoints / maxPoints) : 0; // UI
+      const mediaGeral5 = totalPoints / wsum;                           // 0..5
 
-      // Média (0–5) ponderada por pergunta
-      const mediaGeral5 = totalPoints / wsum;
-
-      // Risco/Atenção/Velocidade (mesmas fórmulas)
       const avgRisk = n ? (rows.reduce((a,b)=>a+b.risk,0)/n) : 1;
       const diffs=[]; for(let i=1;i<n;i++) diffs.push(Math.abs(rows[i].risk-rows[i-1].risk));
       const avgDiff=diffs.length?(diffs.reduce((a,b)=>a+b,0)/diffs.length):0;
       const attentionPct=Math.max(0,100-(avgDiff/4)*100);
+
       const avgMs=times.slice(0,n).reduce((a,b)=>a+b,0)/(n||1);
       const s=avgMs/1000;
       const speedPct=Math.max(0,Math.min(100,100*((45-Math.min(45,Math.max(6,s)))/(45-6))));
       const riskPct=Math.max(0,Math.min(100,((avgRisk-1)/4)*100));
 
-      return {scorePct, mediaGeral5, avgRisk, riskPct, attentionPct, speedPct, avgDiff, s, total:n};
+      return {scorePct,mediaGeral5,avgRisk,riskPct,attentionPct,speedPct,avgDiff,s,total:n};
     }
 
     function finish(){
       cancelAnimationFrame(raf);
       game.style.display='none'; result.style.display='block';
       const {scorePct,mediaGeral5,avgRisk,riskPct,attentionPct,speedPct,avgDiff,s,total}=calc();
-      const rc=riskCategory(avgRisk); const attTxt=attentionLabel(attentionPct); const riskText=rc.cat + rc.extra;
+      const rc=riskCategory(avgRisk); const attTxt=attentionLabel(attentionPct); const riskText=rc.cat + (rc.extra||'');
 
       thanks.textContent=`Obrigado, ${player}! Aqui está seu resultado.`;
       summary.innerHTML=`Pontos (% do máximo): <span class="badge" style="background:${scorePct>=70?'var(--good)':scorePct>=40?'var(--warn)':'var(--bad)'}; color:#06101f">${scorePct.toFixed(0)}%</span><br>
@@ -422,7 +416,7 @@
       drawDonut('gaugeSpeed',speedPct,speedPct>66?'var(--good)':speedPct>33?'var(--warn)':'var(--bad)');
       drawRadar('radar',[scorePct/100,attentionPct/100,speedPct/100]);
 
-      // Lista de respostas com pontuação por questão
+      // Lista de respostas
       answersList.innerHTML='';
       scenarios.forEach((sc,i)=>{
         const a=answers[i]; const li=document.createElement('li');
@@ -438,19 +432,19 @@
       // Export CSV
       btnCSV.onclick=function(){
         const header=['nome','pontos_%','media_0a5_ponderada','perfil_risco_texto','perfil_atencao_texto','tempo_medio_s','respostas_idx'];
-        const row=[player,scorePct.toFixed(0),mediaGeral5.toFixed(2),riskText,attentionLabel(attentionPct),s.toFixed(1),JSON.stringify(answers.map(a=>a?a.idx:null))];
+        const row=[player,scorePct.toFixed(0),mediaGeral5.toFixed(2),riskText,attTxt,s.toFixed(1),JSON.stringify(answers.map(a=>a?a.idx:null))];
         const csv=header.join(',')+'\n'+row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',');
         const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}); const url=URL.createObjectURL(blob);
         const a=document.createElement('a'); a.href=url; a.download='resultado_rac03_quiz.csv'; document.body.appendChild(a); a.click();
         document.body.removeChild(a); URL.revokeObjectURL(url);
       };
 
-      // Envio automático (uma única vez) — envia Média 0..5
+      // Envio automático (única vez) — envia Média 0..5
       enviarResultado({
         nome: player,
-        mediaGeral: mediaGeral5,          // 0..5 (decimal)
+        mediaGeral: mediaGeral5,
         perfilRisco: riskText,
-        perfilAtencao: attentionLabel(attentionPct)
+        perfilAtencao: attTxt
       });
     }
 
@@ -494,26 +488,20 @@
       }
     }
 
-    // Eventos
-    const btnStart=document.querySelector('#btnStart');
-    const btnDemo=document.querySelector('#btnDemo');
-    const btnNext=document.querySelector('#btnNext');
-    const btnBack=document.querySelector('#btnBack');
+    // ----------------- Eventos (definidos UMA vez) -----------------
+    btnStart.addEventListener('click', start);
+    btnNext.addEventListener('click', next);
+    btnBack.addEventListener('click', back);
 
-    btnStart.addEventListener('click',start);
-    btnDemo.addEventListener('click',()=>{ document.querySelector('#playerName').value='Participante Demo'; start(); });
-    btnNext.addEventListener('click',next);
-    btnBack.addEventListener('click',back);
-
-    document.addEventListener('keydown',e=>{
-      if(document.querySelector('#game').style.display!=='grid') return;
-      if(e.key>='1'&&e.key<='4'){
+    document.addEventListener('keydown', e=>{
+      if (game.style.display!=='grid') return;
+      if (e.key>='1' && e.key<='4'){
         const i=parseInt(e.key,10)-1;
         const input=document.querySelectorAll("input[name='opt']")[i];
-        if(input){ input.checked=true; document.querySelector('#btnNext').disabled=false; }
+        if(input){ input.checked=true; btnNext.disabled=false; }
       }
-      if(e.key==='Enter') next();
-      if(e.key==='Escape') back();
+      if (e.key==='Enter') next();
+      if (e.key==='Escape') back();
     });
   })();
   </script>
