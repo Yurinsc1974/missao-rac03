@@ -53,7 +53,11 @@
     .viz{ width:100px; height:100px } 
     .panel{ background:var(--card); border:1px solid rgba(255,255,255,.08); border-radius:var(--radius); padding:18px }
     .list{ margin:0; padding-left:18px; color:var(--muted) } 
-    .result-actions{ display:flex; gap:12px; margin-top:14px }
+    .result-actions{ display:flex; gap:12px; margin-top:14px; align-items:center; flex-wrap:wrap; }
+    .status-badge{ display:inline-block; padding:6px 10px; border-radius:999px; font-weight:700; font-size:12px; }
+    .status-ok{ background:rgba(34,197,94,.2); color:#34d399; border:1px solid rgba(34,197,94,.35); }
+    .status-warn{ background:rgba(245,158,11,.2); color:#fbbf24; border:1px solid rgba(245,158,11,.35); }
+    .status-err{ background:rgba(239,68,68,.2); color:#f87171; border:1px solid rgba(239,68,68,.35); }
     @media (max-width: 900px){ 
       #intro{ grid-template-columns: 1fr; } 
       .game-grid, .result-wrap{ grid-template-columns: 1fr; } 
@@ -80,7 +84,7 @@
         <ul class="list">
           <li>Use o mouse ou as teclas <kbd>1</kbd>–<kbd>4</kbd> para marcar.</li>
           <li>Pressione <kbd>Enter</kbd> para avançar e <kbd>Esc</kbd> para voltar.</li>
-          <li>Ao concluir, você poderá enviar seu resultado.</li>
+          <li>Ao concluir, o resultado será enviado automaticamente.</li>
         </ul>
       </div>
       <div class="panel">
@@ -161,8 +165,8 @@
 
           <div class="result-actions">
             <button id="btnCSV" class="btn-primary">Exportar CSV</button>
-            <button id="btnSend" class="btn-secondary">Enviar resultado</button>
             <button id="btnReiniciar" class="btn-secondary">Jogar de novo</button>
+            <span id="sendStatus" class="status-badge status-warn" style="display:none;">Enviando resultado...</span>
           </div>
         </div>
 
@@ -176,8 +180,8 @@
 
   <script>
   (function(){
-    // URL da Web App (versão /exec)
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbz7X4lwyYjhAUTjl3k3DKQZjv-vuR2m86b8wOz82qw1FDfqY2-jxzwlP5sHaGPLHnyGKQ/exec';
+    // URL da Web App (versão /exec) - sua implantação mais recente
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbyxmt_ERuldGmdP8lZjMhMiWua71Ixah_vWgGFAA4IVcb5D_uqGZC-C_ex-SqA9uVnMBg/exec';
 
     // Base de perguntas (acerto binário + risco 1..5)
     const scenarios = [
@@ -236,6 +240,7 @@
     let answers = new Array(scenarios.length).fill(null);
     let times = new Array(scenarios.length).fill(0);
     let t0 = 0, raf = 0;
+    let sentOnce = false; // evita múltiplos envios no mesmo resultado
 
     const $=s=>document.querySelector(s);
     const intro=$('#intro'), game=$('#game'), result=$('#result');
@@ -244,7 +249,8 @@
     const stepText=$('#stepText'), sceneImg=$('#sceneImg'), topic=$('#topic');
     const questionText=$('#questionText'), options=$('#options'), timer=$('#timer');
     const thanks=$('#thanks'), summary=$('#summary'), answersList=$('#answersList');
-    const btnCSV=$('#btnCSV'), btnSend=$('#btnSend'), btnReiniciar=$('#btnReiniciar');
+    const btnCSV=$('#btnCSV'), btnReiniciar=$('#btnReiniciar');
+    const sendStatus=$('#sendStatus');
 
     const fmtTime=ms=>{const s=Math.round(ms/1000);const m=String(Math.floor(s/60)).padStart(2,'0');const ss=String(s%60).padStart(2,'0');return `${m}:${ss}`;};
 
@@ -279,7 +285,7 @@
     function start(){
       const n=(nameInput.value??'').trim();
       if(!n){alert('Por favor, informe seu nome.');return;}
-      player=n; step=0;
+      player=n; step=0; sentOnce=false;
       answers=new Array(scenarios.length).fill(null);
       times=new Array(scenarios.length).fill(0);
       intro.style.display='none'; result.style.display='none'; game.style.display='grid'; render();
@@ -318,11 +324,11 @@
       const rows=answers.filter(v=>v!=null);
       const n=rows.length;
       const correct=rows.reduce((a,b)=>a+(b.grade?1:0),0);
-      const scorePct=n?(100*correct/n):0;
+      const scorePct=n?(100*correct/n):0;                  // MediaGeral enviada ao backend
       const avgRisk=n?(rows.reduce((a,b)=>a+b.risk,0)/n):1;
       const diffs=[]; for(let i=1;i<n;i++) diffs.push(Math.abs(rows[i].risk-rows[i-1].risk));
       const avgDiff=diffs.length?(diffs.reduce((a,b)=>a+b,0)/diffs.length):0;
-      const attentionPct=Math.max(0,100-(avgDiff/4)*100);
+      const attentionPct=Math.max(0,100-(avgDiff/4)*100);  // 0..100 (consistência)
       const avgMs=times.slice(0,n).reduce((a,b)=>a+b,0)/(n||1);
       const s=avgMs/1000;
       const speedPct=Math.max(0,Math.min(100,100*((45-Math.min(45,Math.max(6,s)))/(45-6))));
@@ -370,46 +376,63 @@
         document.body.removeChild(a); URL.revokeObjectURL(url);
       };
 
-      // Envio do resultado (pedido simples + redirect: 'follow')
-      btnSend.onclick=async function(){
-        if (!GAS_URL || GAS_URL.indexOf('script.google.com') === -1) {
-          alert('Não foi possível enviar agora. Tente novamente mais tarde.');
-          return;
-        }
-        btnSend.disabled = true; btnSend.textContent='Enviando...';
+      // >>> Envio automático (uma única vez) <<<
+      enviarResultado({
+        nome: player,
+        mediaGeral: Math.round(scorePct), // inteiro 0..100
+        perfilRisco: riskText,
+        perfilAtencao: attTxt
+      });
+    }
+
+    async function enviarResultado({nome, mediaGeral, perfilRisco, perfilAtencao}){
+      try {
+        if (sentOnce) return;
+        // Evita reenvio ao navegar no histórico/refresh pós-finalização
+        const dedupKey = `rac03_sent_${nome}_${new Date().toDateString()}`;
+        if (localStorage.getItem(dedupKey)) { sentOnce = true; return; }
+
+        sentOnce = true;
+        sendStatus.className = 'status-badge status-warn';
+        sendStatus.textContent = 'Enviando resultado...';
+        sendStatus.style.display = 'inline-block';
 
         const payload = new URLSearchParams({
-          Nome: player,
-          MediaGeral: Math.round(scorePct),   // preenche a coluna MediaGeral
-          PerfilRisco: (rc.cat + (rc.extra||'')),
-          PerfilAtencao: attTxt
+          Nome: nome,
+          MediaGeral: String(mediaGeral),
+          PerfilRisco: perfilRisco,
+          PerfilAtencao: perfilAtencao
         });
 
+        const r = await fetch(GAS_URL, {
+          method: 'POST',
+          body: payload,
+          redirect: 'follow'
+        });
+
+        // Tenta ler resposta; se CORS bloquear, considera HTTP ok como sucesso
+        let ok = false;
         try {
-          const r = await fetch(GAS_URL, {
-            method: 'POST',
-            body: payload,          // application/x-www-form-urlencoded (simple request)
-            redirect: 'follow'      // importante no Apps Script
-          });
-
-          // Tenta ler resposta; se CORS bloquear, considera OK (o POST já foi enviado)
-          let ok = false;
-          try {
-            const json = await r.json();
-            ok = json?.status === 'OK';
-          } catch(_) {
-            ok = r.ok;
-          }
-          alert(ok ? 'Resultado enviado!' : 'Envio concluído, mas sem confirmação.');
-        } catch (err) {
-          console.warn('Falha envio', err);
-          alert('Falha ao enviar. Verifique sua conexão.');
-        } finally {
-          btnSend.disabled=false; btnSend.textContent='Enviar resultado';
+          const json = await r.json();
+          ok = json?.status === 'OK';
+        } catch(_) {
+          ok = r.ok;
         }
-      };
 
-      btnReiniciar.onclick=()=>{ intro.style.display='block'; result.style.display='none'; };
+        if (ok) {
+          localStorage.setItem(dedupKey, '1');
+          sendStatus.className = 'status-badge status-ok';
+          sendStatus.textContent = 'Resultado enviado!';
+        } else {
+          sendStatus.className = 'status-badge status-err';
+          sendStatus.textContent = 'Falha no envio (sem confirmação)';
+        }
+      } catch (err) {
+        console.warn('Falha envio', err);
+        sendStatus.className = 'status-badge status-err';
+        sendStatus.textContent = 'Falha no envio';
+        sentOnce = false; // permite nova tentativa manual (se implementada futuramente)
+      }
     }
 
     // Eventos
