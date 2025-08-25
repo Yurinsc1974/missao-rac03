@@ -1,395 +1,276 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Missão RAC 03 – Jogo de Análise de Risco & Perfil</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Painel RAC 03 – Ranking ao vivo</title>
   <style>
-    :root{
-      --bg:#0b1220; --card:#111a2b; --muted:#a4b1cd; --text:#eaf1ff;
-      --accent:#4f9cff; --accent-2:#22d3ee; --good:#22c55e; --warn:#f59e0b; --bad:#ef4444;
-      --shadow: 0 10px 30px rgba(0,0,0,.35); --radius:14px;
-    }
+    :root{ --bg:#0b1220; --card:#111a2b; --panel:#0e1628; --muted:#a4b1cd; --text:#eaf1ff; --accent:#4f9cff; --accent2:#22d3ee; --shadow:0 10px 30px rgba(0,0,0,.35); --radius:14px; }
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{
-      margin:0; font:400 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
-      color:var(--text);
-      background:radial-gradient(1200px 800px at 10% -10%, #173057 0%, #0b1220 50%, #090f1a 100%),
-                 url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1200&auto=format&fit=crop') center/cover fixed no-repeat;
-    }
-    .wrap{ max-width:1100px; margin:0 auto; padding:40px 20px 80px; }
-    header{ display:flex; align-items:center; gap:12px; margin-bottom:22px; }
-    .logo{ width:42px; height:42px; border-radius:10px; background:linear-gradient(135deg,var(--accent),var(--accent-2)); display:grid; place-items:center; box-shadow:var(--shadow); }
-    .logo span{font-weight:700}
-    h1{ font-size:24px; margin:0; letter-spacing:.2px }
-    .card{ background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01)); border:1px solid rgba(255,255,255,.08); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden }
-    /* Intro */
-    #intro{ padding:28px; display:grid; grid-template-columns: 1.2fr .8fr; gap:20px; align-items:center }
-    #intro .lead{ font-size:18px; color:var(--muted) }
-    #intro .panel{ background:var(--card); border-radius:12px; padding:20px; }
-    label{ display:block; font-weight:600; margin-bottom:8px }
-    input[type=text]{ width:100%; padding:12px 14px; border-radius:10px; border:1px solid rgba(255,255,255,.15); background:#0d1526; color:var(--text); outline:none }
-    .actions{ display:flex; gap:12px; margin-top:14px }
-    button{ appearance:none; border:0; border-radius:10px; padding:12px 18px; color:#06101f; font-weight:700; cursor:pointer }
-    .btn-primary{ background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:#06101f }
-    .btn-secondary{ background:rgba(255,255,255,.08); color:var(--text) }
-    /* Game */
-    #game{ display:none; }
-    .game-grid{ display:grid; grid-template-columns: 1.1fr .9fr; gap:20px }
-    .scene{ position:relative; height:520px; border-radius:var(--radius); overflow:hidden; background:#111; }
-    .scene img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:brightness(.5) }
-    .scene .progress{ position:absolute; top:14px; left:14px; right:14px; height:10px; border-radius:8px; background:rgba(255,255,255,.12); overflow:hidden; border:1px solid rgba(255,255,255,.15) }
-    .scene .bar{ height:100%; width:0%; background:linear-gradient(90deg,var(--accent),var(--accent-2)); transition:width .35s ease }
-    .scene .step{ position:absolute; top:36px; left:16px; font-size:12px; color:#d0dcf5 }
-    .qa{ background:var(--card); border-radius:var(--radius); padding:20px; display:grid; grid-template-rows: auto 1fr auto; height:520px }
-    .question{ font-size:20px; font-weight:700; margin:2px 0 10px }
-    .options{ display:grid; gap:10px; overflow:auto; padding-right:6px }
-    .opt{ display:flex; align-items:start; gap:10px; padding:12px; border:1px solid rgba(255,255,255,.12); border-radius:12px; background:#0e1729; cursor:pointer; transition:transform .05s ease, border-color .2s ease }
-    .opt:hover{ border-color:rgba(255,255,255,.3) }
-    .opt input{ transform:scale(1.2); margin-top:2px }
-    .qa-footer{ display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:12px }
-    .pill{ background:rgba(255,255,255,.08); color:var(--muted); font-size:12px; padding:6px 10px; border-radius:999px }
-    /* Result */
-    #result{ display:none }
-    .result-wrap{ display:grid; grid-template-columns: 1.1fr .9fr; gap:20px }
-    .hero{ background:linear-gradient(135deg,#0f1b33,#0b1426); border:1px solid rgba(255,255,255,.08); border-radius:var(--radius); padding:22px }
-    .metrics{ display:grid; grid-template-columns: repeat(2, 1fr); gap:14px; margin-top:10px }
-    .metric{ background:#0e1628; border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:14px; display:grid; grid-template-columns: 100px 1fr; gap:12px; align-items:center }
-    .metric h4{ margin:0 0 6px; font-size:14px; color:#cbd6ee }
-    .metric p{ margin:0; color:var(--muted); font-size:13px }
-    .viz{ width:100px; height:100px }
-    .panel{ background:var(--card); border:1px solid rgba(255,255,255,.08); border-radius:var(--radius); padding:18px }
-    .list{ margin:0; padding-left:18px; color:var(--muted) }
-    .result-actions{ display:flex; gap:12px; margin-top:14px }
-    @media (max-width: 900px){
-      #intro{ grid-template-columns: 1fr; }
-      .game-grid, .result-wrap{ grid-template-columns: 1fr; }
-      .scene, .qa{ height:auto }
-    }
+    body{margin:0; font:400 16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,'Helvetica Neue',Arial,'Noto Sans',sans-serif; color:var(--text); background:radial-gradient(1200px 800px at 10% -10%, #173057 0%, #0b1220 50%, #090f1a 100%);}
+    .wrap{width:100%; max-width:1400px; margin:0 auto; padding:16px 18px 22px; height:100%; display:flex; flex-direction:column; gap:12px}
+    header{display:flex; align-items:center; justify-content:space-between; gap:14px}
+    .brand-title{display:flex; align-items:center; gap:12px}
+    .brand{height:40px; filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
+    h1{font-size:22px; margin:0}
+    .status{color:#cbd6ee; font-size:13px}
+    .grid{display:grid; grid-template-columns: 1.1fr .9fr; gap:14px; flex:1; min-height:0; }
+    .panel{background:var(--panel); border:1px solid rgba(255,255,255,.08); border-radius:var(--radius); padding:14px; display:flex; flex-direction:column; min-height:0}
+    .panel h2{margin:0 0 8px; font-size:18px}
+    table{width:100%; border-collapse:separate; border-spacing:0 8px}
+    thead th{font-size:12px; color:#cbd6ee; text-transform:uppercase; letter-spacing:.3px; text-align:left; padding:0 10px}
+    tbody tr{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02)); border:1px solid rgba(255,255,255,.08)}
+    tbody td{padding:10px; vertical-align:middle}
+    tbody tr td:first-child{border-top-left-radius:12px; border-bottom-left-radius:12px}
+    tbody tr td:last-child{border-top-right-radius:12px; border-bottom-right-radius:12px}
+    .badge{padding:4px 8px; border-radius:999px; font-size:12px}
+    .risk-cons{background:rgba(34,197,94,.15); color:#86efac}
+    .risk-mod{background:rgba(245,158,11,.15); color:#fcd34d}
+    .risk-ous{background:rgba(239,68,68,.15); color:#fca5a5}
+    .att-bx{background:rgba(239,68,68,.15); color:#fca5a5}
+    .att-md{background:rgba(245,158,11,.15); color:#fcd34d}
+    .att-al{background:rgba(34,197,94,.15); color:#86efac}
+    .small{color:var(--muted); font-size:12px}
+    .kpis{display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-bottom:10px}
+    .kpi{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02)); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:12px}
+    .kpi .val{font-size:22px; font-weight:800}
+    .kpi .lbl{color:#cbd6ee; font-size:12px}
+    .charts{display:grid; grid-template-columns: 1fr 1fr; gap:10px; min-height:0}
+    .viz{height:220px}
+    .body{flex:1; min-height:0; overflow:auto}
+    .hint{position:fixed; right:14px; bottom:10px; color:#94a3b8; font-size:12px; opacity:.5}
+    .hint kbd{background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15); border-bottom-width:2px; padding:2px 6px; border-radius:6px}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} .charts{grid-template-columns:1fr} }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <div class="logo"><span>R3</span></div>
-      <div>
-        <h1>Missão RAC 03 — Jogo de Análise de Risco & Perfil</h1>
-        <div style="color:var(--muted); font-size:14px">Responda às situações e descubra seu perfil de risco e atenção.</div>
+      <div class="brand-title">
+        https://pt.wikipedia.org/wiki/Special:FilePath/Logotipo_Vale.svg
+        <h1>Painel RAC 03 – Ranking ao vivo</h1>
       </div>
+      <div class="status" id="status">—</div>
     </header>
 
-    <!-- Intro -->
-    <section id="intro" class="card">
-      <div>
-        <p class="lead">Antes de começar, informe seu nome. Você verá perguntas situacionais de operação e segurança. No fim, geraremos indicadores como <b>Índice de Risco</b>, <b>Consistência</b> e <b>Velocidade de Resposta</b>, além da exportação em CSV.</p>
-        <ul class="list">
-          <li>Escala interna de 1 (mais conservador) a 5 (mais arrojado).</li>
-          <li>Use o mouse ou <kbd>1–4</kbd> para marcar; <kbd>Enter</kbd> avança.</li>
-        </ul>
-      </div>
+    <div class="grid">
       <div class="panel">
-        <label for="playerName">Seu nome ou apelido</label>
-        <input id="playerName" type="text" placeholder="Ex.: Maria S." />
-        <div class="actions">
-          <button id="btnStart" class="btn-primary">Iniciar</button>
-          <button id="btnDemo" class="btn-secondary" title="Preencher nome e começar">Demo</button>
+        <h2>Ranking</h2>
+        <div class="body">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Nome</th>
+                <th>Média</th>
+                <th>Perfil de Risco</th>
+                <th>Perfil de Atenção</th>
+                <th>Data/Hora</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
         </div>
       </div>
-    </section>
 
-    <!-- Game -->
-    <section id="game" class="game-grid">
-      <div class="scene card">
-        <div class="progress"><div class="bar" id="progressBar"></div></div>
-        <div class="step" id="stepText"></div>
-        <img id="sceneImg" alt="Cenário" src=""/>
-      </div>
-      <div class="qa card">
-        <div>
-          <div class="pill" id="topic">Cenário</div>
-          <div class="question" id="questionText"></div>
+      <div class="panel">
+        <h2>Indicadores</h2>
+        <div class="kpis">
+          <div class="kpi"><div class="val" id="k_total">0</div><div class="lbl">Participantes</div></div>
+          <div class="kpi"><div class="val" id="k_media">0.00</div><div class="lbl">Média geral</div></div>
+          <div class="kpi"><div class="val" id="k_cons">0</div><div class="lbl">% Conservador</div></div>
+          <div class="kpi"><div class="val" id="k_ous">0</div><div class="lbl">% Ousado</div></div>
         </div>
-        <div class="options" id="options"></div>
-        <div class="qa-footer">
-          <span class="pill" id="timer">00:00</span>
-          <div>
-            <button id="btnBack" class="btn-secondary">Voltar</button>
-            <button id="btnNext" class="btn-primary" disabled>Próximo</button>
-          </div>
+        <div class="charts">
+          <svg class="viz" viewBox="0 0 100 100" id="pieRisco"></svg>
+          <svg class="viz" viewBox="0 0 100 100" id="barAtencao"></svg>
         </div>
       </div>
-    </section>
-
-    <!-- Result -->
-    <section id="result">
-      <div class="result-wrap">
-        <div class="hero">
-          <h2 id="thanks"></h2>
-          <p class="lead" id="summary"></p>
-          <div class="metrics">
-            <div class="metric">
-              <svg class="viz" viewBox="0 0 100 100" id="gaugeRisk"></svg>
-              <div>
-                <h4>Índice de Risco</h4>
-                <p>Média ponderada das respostas (1 conservador → 5 arrojado).</p>
-              </div>
-            </div>
-            <div class="metric">
-              <svg class="viz" viewBox="0 0 100 100" id="gaugeAttention"></svg>
-              <div>
-                <h4>Consistência (Atenção)</h4>
-                <p>Variação entre respostas consecutivas (menor é melhor).</p>
-              </div>
-            </div>
-            <div class="metric">
-              <svg class="viz" viewBox="0 0 100 100" id="gaugeSpeed"></svg>
-              <div>
-                <h4>Velocidade Média</h4>
-                <p>Tempo médio por pergunta.</p>
-              </div>
-            </div>
-            <div class="metric">
-              <svg class="viz" viewBox="0 0 100 100" id="radar"></svg>
-              <div>
-                <h4>Radar</h4>
-                <p>Resumo visual dos indicadores principais.</p>
-              </div>
-            </div>
-          </div>
-          <div class="result-actions">
-            <button id="btnCSV" class="btn-primary">Exportar CSV</button>
-            <button id="btnReiniciar" class="btn-secondary">Jogar de novo</button>
-          </div>
-        </div>
-        <div class="panel">
-          <h3>Suas respostas</h3>
-          <ol id="answersList" class="list"></ol>
-        </div>
-      </div>
-    </section>
+    </div>
   </div>
 
-  <script>
-  (function(){
-    // ------- Dados -------
-    const scenarios = [
-      { img: 'https://images.unsplash.com/photo-1603791440384-56cd371ee9a7?auto=format&fit=crop&w=1200&q=80',
-        topic:'Condução',
-        q: '1. Com o uso da marcha correta o que garantimos na operação dos caminhões? Assinale a resposta que melhor exemplifica o seu uso.',
-        opt: [
-          {t:'Garantimos a dirigibilidade do veículo inclusive com a utilização dos freios auxiliares.', v:1},
-          {t:'Garantimos a refrigeração do retarder, em declives longos.', v:2},
-          {t:'Melhor força de frenagem pelo freio motor pois a rotação do motor depende da marcha.', v:3},
-          {t:'Melhor lubrificação do motor pois a rotação do motor depende da marcha.', v:5},
-        ]},
-      { img: 'https://eqpro.com.br/wp-content/uploads/2017/08/epi-equipamento-seguranca-equipro-02z.jpg?auto=format&fit=crop&w=1200&q=80',
-        topic:'Frenagem',
-        q: '2. Quanto ao uso dos freios auxiliares, em pistas escorregadias. Como devemos proceder:',
-        opt: [
-          {t:'Priorizar o freio de serviço que freia em todas as rodas enquanto os freios auxiliares freiam em 4 rodas em caminhões 6x4 e 8x4.', v:3},
-          {t:'Utilizar o freio de serviço que freia em todas as rodas enquanto os freios auxiliares freiam em 4 rodas em caminhões 6x4 e 8x4.', v:1},
-          {t:'Priorizar o freio auxiliares que freiam em 4 rodas em caminhões 6x4 e 8x4.', v:5},
-          {t:'Utilizar o freio de serviço que freia por pressão de ar exceto nas cuicas duplas.', v:2},
-        ]},
-      { img: 'https://images.unsplash.com/photo-1573164574572-cb89e39749b4?auto=format&fit=crop&w=1200&q=80',
-        topic:'Testes',
-        q: '3. Quanto à testagem dos freios, é correto dizer:',
-        opt: [
-          {t:'O teste de freio em rampa tem o objetivo de avaliar a eficiência do freio de estacionamento.', v:2},
-          {t:'No teste de estanqueidade avaliamos fuga de ar dos freios, já o teste de freio em rampa avaliamos a eficiência dos freios de serviço e estacionamento.', v:1},
-          {t:'O teste de freio em rampa tem o objetivo de avaliar fuga de ar, como também avaliamos a eficiência dos freios de serviço e estacionamento.', v:3},
-          {t:'O teste de estanqueidade dos freios pode ser feito pelos operadores afins de testar os freios.', v:5},
-        ]},
-      { img: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80',
-        topic:'Vias de Acesso',
-        q: '4. Para a liberação das vias de acessos, qual o fluxo devemos seguir para a aprovação e liberação?',
-        opt: [
-          {t:'Preencher o formulário, premissas: NR22 (largura conforme fluxo e maior equipamento), mão única/dupla, manual de estradas (leiras, inclinações e superelevações).', v:1},
-          {t:'Preencher o formulário, premissas: NR22 (largura), manual de estradas (leiras, inclinações e superelevações).', v:2},
-          {t:'Preencher o formulário, premissas: NR22 (largura), independente do equipamento, manual de estradas (leiras, inclinações e superelevações).', v:3},
-          {t:'Apenas preencher o formulário de liberação.', v:5},
-        ]},
-      { img: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1200&q=80',
-        topic:'Escavadeira',
-        q: '5. Em operação de escavadeira, para garantir a segurança do operador/máquina, em atividade sobre plataforma, é correto dizer:',
-        opt: [
-          {t:'Estabilizar a máquina; roda guia para a crista.', v:3},
-          {t:'Atentar à altura da plataforma; estabilizar; roda guia para a crista; atentar aos taludes; carregamentos a 45º.', v:1},
-          {t:'Mesmo que acima + carregamentos a 90º pela maior disponibilidade de material.', v:2},
-          {t:'Mesmo que acima + carregamentos a 90º com escavação sob esteiras.', v:5},
-        ]},
-      { img: 'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?auto=format&fit=crop&w=1200&q=80',
-        topic:'Pressão de Ar',
-        q: '6. Quanto à pressão do ar do sistema de freio, podemos afirmar que:',
-        opt: [
-          {t:'Não operar com 7 bar; falta de ar no freio de serviço → aplicar o de estacionamento.', v:2},
-          {t:'Ar do freio de estacionamento acabou (0 bar) → rodas de estacionamento irão frear.', v:5},
-          {t:'Falta de ar do freio de serviço → aplicar o de estacionamento gradativamente até parar.', v:3},
-          {t:'Pressão ideal 8–10 bar antes de operar; monitorar painel; falta de ar no serviço → aplicar estacionamento gradativamente.', v:1},
-        ]},
-      { img: 'https://vale.com/documents/d/guest/estrada-de-ferro-vitoria-img-1-png-7?auto=format&fit=crop&w=1200&q=80',
-        topic:'Basculamento',
-        q: '7. Marque a opção correta que apresenta as regras básicas para basculamento.',
-        opt: [
-          {t:'Observar obstáculos e piso; afastamento da crista; verificar inclinômetro e não bascular próximo ao máximo permitido.', v:2},
-          {t:'Somente em locais liberados; observar piso e leiras; afastamento da crista; checar inclinômetro; evitar valores próximos do máximo, reposicionando o caminhão.', v:1},
-          {t:'Basculamento só em praças de deposição com piso firme.', v:5},
-          {t:'Verificar inclinação (4º lateral / 6º frontal); acionar tomada de força e de ar; acompanhar até último estágio; puxar a frente sem bater a tampa.', v:3},
-        ]},
-      { img: 'https://images.unsplash.com/photo-1501706362039-c06b2d715385?auto=format&fit=crop&w=1200&q=80',
-        topic:'Condição Insegura',
-        q: '8. Diante de uma condição insegura durante a operação, qual ação você toma?',
-        opt: [
-          {t:'Parar o caminhão em local seguro e informar a liderança imediatamente.', v:5},
-          {t:'Marcar no emociograma e aguardar entrarem em contato com você.', v:1},
-          {t:'Procurar o Pitstop parando o equipamento em local seguro.', v:4},
-          {t:'Realizar o direito de recusa.', v:2},
-        ]},
-    ];
+  <div class="hint">Dê <kbd>F</kbd> para tela cheia · <kbd>R</kbd> para atualizar</div>
 
-    // ------- Estado/elementos/utilitários -------
-    let player = '', step = 0, answers = [], times = [], t0 = 0, raf = 0;
-    const $ = s => document.querySelector(s);
-    const intro = $('#intro'), game = $('#game'), result = $('#result');
-    const nameInput = $('#playerName'), btnStart = $('#btnStart'), btnDemo = $('#btnDemo');
-    const btnBack = $('#btnBack'), btnNext = $('#btnNext'), progressBar = $('#progressBar');
-    const stepText = $('#stepText'), sceneImg = $('#sceneImg'), topic = $('#topic');
-    const questionText = $('#questionText'), options = $('#options'), timer = $('#timer');
-    const thanks = $('#thanks'), summary = $('#summary'), answersList = $('#answersList');
-    const btnCSV = $('#btnCSV'), btnReiniciar = $('#btnReiniciar');
+<script>
+(function(){
+  const ENDPOINT = 'https://script.google.com/macros/s/AKfycbw_Spraer70nSqkNFu8BLZUCDhdhaaLqcjnqQ_wnRjpY5qGMY-wakGaU3wthdlp1XmIwg/exec'; // mantido somente no código (não exibido na UI)
+  const REFRESH_MS = 15000; // auto-refresh
 
-    const fmtTime = ms => { const s = Math.round(ms/1000); const m = String(Math.floor(s/60)).padStart(2,'0'); const ss = String(s%60).padStart(2,'0'); return `${m}:${ss}`; };
-    function drawDonut(id,percent,color){ const el=document.getElementById(id); const p=Math.max(0,Math.min(100,percent)); const r=42,c=2*Math.PI*r,off=c*(1-p/100);
-      el.innerHTML = `<circle cx="50" cy="50" r="46" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="8"/>
-        <circle cx="50" cy="50" r="${r}" fill="none" stroke="${color}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 50 50)"/>
-        <text x="50" y="54" text-anchor="middle" font-size="18" fill="#eaf1ff" font-weight="700">${Math.round(p)}%</text>`;
-    }
-    function drawRadar(id, axes){
-      const el = document.getElementById(id), cx=50, cy=50, r=40, ang=[-90,30,150].map(a=>a*Math.PI/180);
-      const pts = axes.map((v,i)=>{ const rr=r*v; return [cx+rr*Math.cos(ang[i]), cy+rr*Math.sin(ang[i])]});
-      const grid=[0.33,0.66,1].map(g=>{ const gpts=ang.map(a=>`${cx+r*g*Math.cos(a)},${cy+r*g*Math.sin(a)}`); return `<polygon points="${gpts.join(' ')}" fill="none" stroke="rgba(255,255,255,.12)"/>`; }).join('');
-      const poly=`<polygon points="${pts.map(p=>p.join(',')).join(' ')}" fill="rgba(79,156,255,.25)" stroke="var(--accent)"/>`;
-      const labels=['Risco','Atenção','Velocidade'].map((t,i)=>{const rr=r*1.15,x=cx+rr*Math.cos(ang[i]),y=cy+rr*Math.sin(ang[i]);return `<text x="${x}" y="${y}" text-anchor="middle" font-size="10" fill="#cbd6ee">${t}</text>`}).join('');
-      el.innerHTML = `<g>${grid}${poly}${labels}</g>`;
-    }
-    function updateTimer(){ timer.textContent = fmtTime(performance.now() - t0); raf = requestAnimationFrame(updateTimer); }
+  // === NOVO: ordem padrão por maior Média (descendente)
+  const ORDER_MODE = 'media_desc';
 
-    // ------- Helpers -------
-    function attentionLabel(p){
-      if(p > 66) return 'Alta atenção e consistência.';
-      if(p > 33) return 'Atenção moderada, algumas variações.';
-      return 'Baixa atenção, respostas inconsistentes.';
-    }
+  const status = document.getElementById('status');
+  const tbody = document.getElementById('tbody');
+  const k_total = document.getElementById('k_total');
+  const k_media = document.getElementById('k_media');
+  const k_cons = document.getElementById('k_cons');
+  const k_ous = document.getElementById('k_ous');
+  let timer = 0;
 
-    // ------- Fluxo -------
-    function start(){
-      const n = (nameInput.value ?? '').trim(); if(!n){ alert('Por favor, informe seu nome.'); return; }
-      player = n; step = 0; answers = []; times = [];
-      intro.style.display = 'none'; result.style.display='none'; game.style.display = 'grid';
-      render();
-    }
-    function render(){
-      const total=scenarios.length, sc=scenarios[step];
-      sceneImg.src = sc.img; stepText.textContent = `Pergunta ${step+1} de ${total}`;
-      progressBar.style.width = `${((step)/total)*100}%`;
-      topic.textContent = sc.topic; questionText.textContent = sc.q; options.innerHTML = '';
-      sc.opt.forEach((o,idx)=>{ const id=`opt_${step}_${idx}`; const li=document.createElement('label'); li.className='opt'; li.setAttribute('for',id);
-        const radio=document.createElement('input'); radio.type='radio'; radio.name='opt'; radio.id=id; radio.value=o.v; radio.addEventListener('change',()=>btnNext.disabled=false);
-        const span=document.createElement('div'); span.innerHTML = `<b>${idx+1})</b> ${o.t}`; li.appendChild(radio); li.appendChild(span); options.appendChild(li);
-      });
-      btnNext.disabled = true; btnBack.disabled = (step===0); cancelAnimationFrame(raf); t0 = performance.now(); updateTimer();
-    }
-    function next(){
-      const sel = document.querySelector("input[name='opt']:checked"); if(!sel){ alert('Selecione uma opção para continuar.'); return; }
-      times.push(performance.now()-t0); answers.push(parseInt(sel.value,10)); step++; (step < scenarios.length) ? render() : finish();
-    }
-    function back(){ if(step===0) return; step--; render(); }
+  // ===== Utils
+  function parseDate(d){ if(d instanceof Date) return d; const t=(''+d).replace('Z',''); return new Date(t); }
+  function fmtDate(d){ const dt=parseDate(d); if(isNaN(dt)) return '-'; const dd=dt.toLocaleDateString('pt-BR'); const hh=dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); return dd+' '+hh; }
+  function badgeRisco(txt){ if(txt==='Perfil Conservador') return '<span class="badge risk-cons">Conservador</span>'; if(txt==='Perfil Moderado') return '<span class="badge risk-mod">Moderado</span>'; return '<span class="badge risk-ous">Ousado</span>'; }
+  function badgeAtencao(txt){ if(/Alta/i.test(txt)) return '<span class="badge att-al">Alta</span>'; if(/Moderada/i.test(txt)) return '<span class="badge att-md">Moderada</span>'; return '<span class="badge att-bx">Baixa</span>'; }
 
-    // ------- Métricas -------
-    function calc(){
-      const n=answers.length, avg = answers.reduce((a,b)=>a+b,0)/n;
-      const diffs=[]; for(let i=1;i<n;i++) diffs.push(Math.abs(answers[i]-answers[i-1]));
-      const avgDiff = diffs.length ? (diffs.reduce((a,b)=>a+b,0)/diffs.length) : 0;
-      const attentionPct = Math.max(0, 100 - (avgDiff/4)*100);
-      const avgMs = times.reduce((a,b)=>a+b,0)/n; const s = avgMs/1000;
-      const speedPct = Math.max(0, Math.min(100, 100*((45 - Math.min(45, Math.max(6, s))) / (45-6))));
-      const riskPct = Math.max(0, Math.min(100, ((avg-1)/4)*100));
-      return { avg, attentionPct, speedPct, riskPct, avgDiff, s };
-    }
-    function badgeRisk(avg){ if(avg <= 2) return {t:'Perfil Conservador', c:'var(--good)'}; if(avg <= 3.5) return {t:'Perfil Moderado', c:'var(--warn)'}; return {t:'Perfil Ousado', c:'var(--bad)'}; }
-
-    function finish(){
-      cancelAnimationFrame(raf); game.style.display='none'; result.style.display='block';
-      const {avg, attentionPct, speedPct, riskPct, avgDiff, s} = calc(); const badge = badgeRisk(avg);
-
-      thanks.textContent = `Obrigado, ${player}! Aqui está seu resultado.`;
-      const attTxt = attentionLabel(attentionPct);
-      summary.innerHTML = `Média das respostas: <b>${avg.toFixed(2)}</b> — <b style="color:${badge.c}">${badge.t}</b>.<br>
-        Consistência: <b>${attTxt}</b> (variação média ${avgDiff.toFixed(2)}). Tempo médio por pergunta: <b>${s.toFixed(1)}s</b>.`;
-
-      drawDonut('gaugeRisk', riskPct, badge.c);
-      drawDonut('gaugeAttention', attentionPct, attentionPct>66? 'var(--good)' : attentionPct>33? 'var(--warn)' : 'var(--bad)');
-      drawDonut('gaugeSpeed', speedPct, speedPct>66? 'var(--good)' : speedPct>33? 'var(--warn)' : 'var(--bad)');
-      drawRadar('radar', [ riskPct/100, attentionPct/100, speedPct/100 ]);
-
-      // Respostas
-      answersList.innerHTML = '';
-      scenarios.forEach((sc,i)=>{
-        const li = document.createElement('li');
-        const chosen = answers[i];
-        const o = sc.opt.find(o=>o.v===chosen) || sc.opt[0];
-        li.innerHTML = `<b>${sc.q}</b><br><span style="color:var(--muted)">Sua resposta: ${o.t} <i>(valor ${chosen})</i></span>`;
-        answersList.appendChild(li);
-      });
-
-      // Export CSV (mantém % e adiciona descrição)
-      btnCSV.onclick = function(){
-        const header = ['nome','media','perfil','risco(0-100)','atencao(0-100)','perfil_atencao','velocidade(0-100)','tempo_medio_s','respostas'];
-        const row = [player, avg.toFixed(2), badge.t, riskPct.toFixed(0), attentionPct.toFixed(0), attTxt, speedPct.toFixed(0), s.toFixed(1), JSON.stringify(answers)];
-        const csv = header.join(',') + '\n' + row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',');
-        const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href=url; a.download='resultado_rac03_jogo.csv'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-      };
-
-      // [GAS] Envio sem preflight (envia PerfilAtencao como TEXTO)
-      const GAS_URL = 'https://script.google.com/macros/s/AKfycbz7X4lwyYjhAUTjl3k3DKQZjv-vuR2m86b8wOz82qw1FDfqY2-jxzwlP5sHaGPLHnyGKQ/exec';
-      const body = new URLSearchParams({
-        nome: player,
-        media: avg.toFixed(2),
-        perfil: badge.t,
-        risco: String(Math.round(riskPct)),
-        PerfilAtencao: attTxt,           // <— campo esperado pelo GAS como texto
-        atencao: String(Math.round(attentionPct)), // opcional: mantém % para consulta
-        velocidade: String(Math.round(speedPct)),
-        tempoMedioSeg: s.toFixed(1),
-        respostas: JSON.stringify(answers)
-      });
-      fetch(GAS_URL, { method:'POST', body })
-        .then(async r => { const txt = await r.text(); try{ return JSON.parse(txt);}catch{ return { raw: txt }; } })
-        .then(data => console.log('Sheets:', data))
-        .catch(err => console.warn('Falha backend', err));
-
-      // Reiniciar
-      btnReiniciar.onclick = ()=>{ intro.style.display='block'; result.style.display='none'; };
-    }
-
-    // ------- Eventos -------
-    btnStart.addEventListener('click', start);
-    btnDemo.addEventListener('click', ()=>{ nameInput.value = 'Participante Demo'; start(); });
-    btnNext.addEventListener('click', next);
-    btnBack.addEventListener('click', back);
-    document.addEventListener('keydown', (e)=>{
-      if(game.style.display !== 'grid') return;
-      if(e.key>='1' && e.key<='4'){
-        const i = parseInt(e.key,10)-1; const input = document.querySelectorAll("input[name='opt']")[i];
-        if(input){ input.checked = true; btnNext.disabled = false; }
+  // === NOVO: parser numérico robusto (aceita 2,63 | 2.63 | 1.234,56 | 1,234.56)
+  function num(v){
+    if (v === null || v === undefined) return null;
+    if (typeof v === 'number' && Number.isFinite(v)) return v;
+    let s = String(v).trim();
+    if (s === '') return null;
+    s = s.replace(/\s/g,'');
+    if (s.includes(',') && s.includes('.')) {
+      if (s.lastIndexOf(',') > s.lastIndexOf('.')) {
+        s = s.replace(/\./g,'').replace(',', '.'); // vírgula decimal
+      } else {
+        s = s.replace(/,/g, ''); // ponto decimal
       }
-      if(e.key==='Enter') next();
-      if(e.key==='Escape') back();
+    } else if (s.includes(',')) {
+      s = s.replace(',', '.'); // vírgula decimal
+    }
+    const n = Number(s);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  // ===== Gráficos
+  function drawPieRisco(id, counts){
+    const total = Math.max(1, counts.cons+counts.mod+counts.ous);
+    const el = document.getElementById(id);
+    const parts = [ {v:counts.cons,c:'#22c55e'}, {v:counts.mod,c:'#f59e0b'}, {v:counts.ous,c:'#ef4444'} ];
+    let acc=0, arcs=[];
+    parts.forEach(p=>{
+      const a0=acc/total*2*Math.PI; acc+=p.v; const a1=acc/total*2*Math.PI;
+      const r=42,cx=50,cy=50;
+      const x0=cx+r*Math.cos(a0-Math.PI/2), y0=cy+r*Math.sin(a0-Math.PI/2);
+      const x1=cx+r*Math.cos(a1-Math.PI/2), y1=cy+r*Math.sin(a1-Math.PI/2);
+      const large=(a1-a0)>Math.PI?1:0;
+      const d=`M ${cx} ${cy} L ${x0} ${y0} A ${r} ${r} 0 ${large} 1 ${x1} ${y1} Z`;
+      arcs.push(`<path d="${d}" fill="${p.c}" opacity=".85" stroke="rgba(255,255,255,.08)"/>`);
     });
-  })();
-  </script>
+    const pct = m => Math.round(m/total*100);
+    el.innerHTML = `<g>${arcs.join('')}</g>
+      <text x="50" y="48" text-anchor="middle" font-size="10" fill="#cbd6ee">Conservador</text>
+      <text x="50" y="60" text-anchor="middle" font-size="12" fill="#eaf1ff" font-weight="700">${pct(counts.cons)}%</text>`;
+  }
+
+  function drawBarAtencao(id, counts){
+    const el = document.getElementById(id);
+    const maxv = Math.max(counts.alta,counts.moderada,counts.baixa,1);
+    const bars = [
+      {x:15,w:20,v:counts.baixa,c:'#ef4444',t:'Baixa'},
+      {x:40,w:20,v:counts.moderada,c:'#f59e0b',t:'Moderada'},
+      {x:65,w:20,v:counts.alta,c:'#22c55e',t:'Alta'}
+    ];
+    const rects = bars.map(b=>{
+      const h=70*(b.v/maxv); const y=85-h;
+      return `<rect x="${b.x}" y="${y}" width="${b.w}" height="${h}" fill="${b.c}" rx="4"/>
+              <text x="${b.x+b.w/2}" y="80" text-anchor="middle" font-size="10" fill="#cbd6ee">${b.t}</text>
+              <text x="${b.x+b.w/2}" y="${y-4}" text-anchor="middle" font-size="11" fill="#eaf1ff" font-weight="700">${b.v}</text>`;
+    }).join('');
+    el.innerHTML = `<rect x="8" y="10" width="84" height="80" fill="none" stroke="rgba(255,255,255,.12)"/>${rects}`;
+  }
+
+  // ===== Ordenação
+  function sortRows(rows, mode){
+    // usando o parser robusto ‘num’ e deixando nulos por último
+    const byMedia = (a,b) => {
+      const na = num(a.MediaGeral), nb = num(b.MediaGeral);
+      if (na === null && nb === null) return 0;
+      if (na === null) return 1;
+      if (nb === null) return -1;
+      return na - nb; // crescente; desc inverte no switch
+    };
+    const byDate = (a,b) => (new Date(a.DataHora) - new Date(b.DataHora));
+
+    if(mode==='media_asc')  return rows.sort(byMedia);
+    if(mode==='media_desc') return rows.sort((a,b)=> -byMedia(a,b));
+    if(mode==='data_asc')   return rows.sort(byDate);
+    if(mode==='data_desc')  return rows.sort((a,b)=> -byDate(a,b));
+    return rows;
+  }
+
+  // ===== JSONP loader (sem CORS)
+  function jsonp(url){
+    return new Promise((resolve,reject)=>{
+      const cbName = '__cb_' + Math.random().toString(36).slice(2);
+      const cleanup = ()=>{ delete window[cbName]; if(s&&s.parentNode) s.parentNode.removeChild(s); if(t) clearTimeout(t); };
+      window[cbName] = (data)=>{ cleanup(); resolve(data); };
+      const s = document.createElement('script');
+      s.src = url + (url.includes('?')?'&':'?') + 'callback=' + cbName + '&ts=' + Date.now();
+      s.onerror = ()=>{ cleanup(); reject(new Error('Falha JSONP')); };
+      document.body.appendChild(s);
+      const t = setTimeout(()=>{ cleanup(); reject(new Error('Timeout JSONP')); }, 15000);
+    });
+  }
+
+  async function load(){
+    const base = ENDPOINT + '?action=list';
+    status.textContent = 'Atualizando…';
+    try{
+      const data = await jsonp(base);
+      if(!data || data.status!=='OK') throw new Error('Formato inválido');
+      render(data.rows||[]);
+      status.textContent = 'Atualizado às ' + new Date().toLocaleTimeString('pt-BR');
+    }catch(e){
+      status.textContent = 'Falha ao atualizar';
+    }
+  }
+
+  function render(rows){
+    // ordena e exibe
+    const arr = sortRows(rows.slice(0,50), ORDER_MODE);
+    tbody.innerHTML = '';
+    arr.forEach((r,i)=>{
+      const m = num(r.MediaGeral);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td style="width:40px">${i+1}</td>
+        <td>${r.Nome||'-'}</td>
+        <td><b>${m===null?'-':m.toFixed(2)}</b></td>
+        <td>${badgeRisco(r.PerfilRisco||'')}</td>
+        <td>${badgeAtencao(r.PerfilAtencao||'')}</td>
+        <td class="small">${fmtDate(r.DataHora)}</td>`;
+      tbody.appendChild(tr);
+    });
+
+    // KPIs & gráficos (com base nos exibidos)
+    const n = arr.length;
+    const avg = n ? (arr.reduce((s,r)=> s + (num(r.MediaGeral) ?? 0), 0) / n) : 0;
+    const cons = arr.filter(r=> r.PerfilRisco==='Perfil Conservador').length;
+    const mod  = arr.filter(r=> r.PerfilRisco==='Perfil Moderado').length;
+    const ous  = arr.filter(r=> r.PerfilRisco==='Perfil Ousado').length;
+    const attA = arr.filter(r=> /Alta/i.test(r.PerfilAtencao||'')).length;
+    const attM = arr.filter(r=> /Moderada/i.test(r.PerfilAtencao||'')).length;
+    const attB = arr.filter(r=> /Baixa/i.test(r.PerfilAtencao||'')).length;
+
+    k_total.textContent = n;
+    k_media.textContent = avg.toFixed(2);
+    k_cons.textContent = Math.round(100*cons/Math.max(1,n));
+    k_ous.textContent = Math.round(100*ous/Math.max(1,n));
+
+    drawPieRisco('pieRisco', {cons,mod,ous});
+    drawBarAtencao('barAtencao', {alta:attA, moderada:attM, baixa:attB});
+  }
+
+  function start(){
+    clearInterval(timer); timer = setInterval(load, REFRESH_MS); load();
+  }
+
+  // ===== Fullscreen helpers
+  function toggleFull(){
+    if(document.fullscreenElement){ document.exitFullscreen(); }
+    else { document.documentElement.requestFullscreen({navigationUI:'hide'}).catch(()=>{}); }
+  }
+  document.addEventListener('keydown', (e)=>{
+    if(e.key==='f' || e.key==='F') toggleFull();
+    if(e.key==='r' || e.key==='R') load();
+  });
+  document.addEventListener('dblclick', toggleFull);
+
+  // init
+  start();
+})();
+</script>
 </body>
 </html>
