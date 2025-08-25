@@ -172,7 +172,7 @@
 
   <script>
   (function(){
-    // ------- Dados (mesmo conteúdo que você já tinha) -------
+    // ------- Dados -------
     const scenarios = [
       { img: 'https://images.unsplash.com/photo-1603791440384-56cd371ee9a7?auto=format&fit=crop&w=1200&q=80',
         topic:'Condução',
@@ -248,7 +248,7 @@
         ]},
     ];
 
-    // ------- Estado/elementos/utilitários (idem sua versão) -------
+    // ------- Estado/elementos/utilitários -------
     let player = '', step = 0, answers = [], times = [], t0 = 0, raf = 0;
     const $ = s => document.querySelector(s);
     const intro = $('#intro'), game = $('#game'), result = $('#result');
@@ -274,6 +274,13 @@
       el.innerHTML = `<g>${grid}${poly}${labels}</g>`;
     }
     function updateTimer(){ timer.textContent = fmtTime(performance.now() - t0); raf = requestAnimationFrame(updateTimer); }
+
+    // ------- Helpers -------
+    function attentionLabel(p){
+      if(p > 66) return 'Alta atenção e consistência.';
+      if(p > 33) return 'Atenção moderada, algumas variações.';
+      return 'Baixa atenção, respostas inconsistentes.';
+    }
 
     // ------- Fluxo -------
     function start(){
@@ -316,4 +323,73 @@
       cancelAnimationFrame(raf); game.style.display='none'; result.style.display='block';
       const {avg, attentionPct, speedPct, riskPct, avgDiff, s} = calc(); const badge = badgeRisk(avg);
 
-      thanks.textContent = `Obrigado, ${player}! Aqui
+      thanks.textContent = `Obrigado, ${player}! Aqui está seu resultado.`;
+      const attTxt = attentionLabel(attentionPct);
+      summary.innerHTML = `Média das respostas: <b>${avg.toFixed(2)}</b> — <b style="color:${badge.c}">${badge.t}</b>.<br>
+        Consistência: <b>${attTxt}</b> (variação média ${avgDiff.toFixed(2)}). Tempo médio por pergunta: <b>${s.toFixed(1)}s</b>.`;
+
+      drawDonut('gaugeRisk', riskPct, badge.c);
+      drawDonut('gaugeAttention', attentionPct, attentionPct>66? 'var(--good)' : attentionPct>33? 'var(--warn)' : 'var(--bad)');
+      drawDonut('gaugeSpeed', speedPct, speedPct>66? 'var(--good)' : speedPct>33? 'var(--warn)' : 'var(--bad)');
+      drawRadar('radar', [ riskPct/100, attentionPct/100, speedPct/100 ]);
+
+      // Respostas
+      answersList.innerHTML = '';
+      scenarios.forEach((sc,i)=>{
+        const li = document.createElement('li');
+        const chosen = answers[i];
+        const o = sc.opt.find(o=>o.v===chosen) || sc.opt[0];
+        li.innerHTML = `<b>${sc.q}</b><br><span style="color:var(--muted)">Sua resposta: ${o.t} <i>(valor ${chosen})</i></span>`;
+        answersList.appendChild(li);
+      });
+
+      // Export CSV (mantém % e adiciona descrição)
+      btnCSV.onclick = function(){
+        const header = ['nome','media','perfil','risco(0-100)','atencao(0-100)','perfil_atencao','velocidade(0-100)','tempo_medio_s','respostas'];
+        const row = [player, avg.toFixed(2), badge.t, riskPct.toFixed(0), attentionPct.toFixed(0), attTxt, speedPct.toFixed(0), s.toFixed(1), JSON.stringify(answers)];
+        const csv = header.join(',') + '\n' + row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',');
+        const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href=url; a.download='resultado_rac03_jogo.csv'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+      };
+
+      // [GAS] Envio sem preflight (envia PerfilAtencao como TEXTO)
+      const GAS_URL = 'https://script.google.com/macros/s/AKfycbz7X4lwyYjhAUTjl3k3DKQZjv-vuR2m86b8wOz82qw1FDfqY2-jxzwlP5sHaGPLHnyGKQ/exec';
+      const body = new URLSearchParams({
+        nome: player,
+        media: avg.toFixed(2),
+        perfil: badge.t,
+        risco: String(Math.round(riskPct)),
+        PerfilAtencao: attTxt,           // <— campo esperado pelo GAS como texto
+        atencao: String(Math.round(attentionPct)), // opcional: mantém % para consulta
+        velocidade: String(Math.round(speedPct)),
+        tempoMedioSeg: s.toFixed(1),
+        respostas: JSON.stringify(answers)
+      });
+      fetch(GAS_URL, { method:'POST', body })
+        .then(async r => { const txt = await r.text(); try{ return JSON.parse(txt);}catch{ return { raw: txt }; } })
+        .then(data => console.log('Sheets:', data))
+        .catch(err => console.warn('Falha backend', err));
+
+      // Reiniciar
+      btnReiniciar.onclick = ()=>{ intro.style.display='block'; result.style.display='none'; };
+    }
+
+    // ------- Eventos -------
+    btnStart.addEventListener('click', start);
+    btnDemo.addEventListener('click', ()=>{ nameInput.value = 'Participante Demo'; start(); });
+    btnNext.addEventListener('click', next);
+    btnBack.addEventListener('click', back);
+    document.addEventListener('keydown', (e)=>{
+      if(game.style.display !== 'grid') return;
+      if(e.key>='1' && e.key<='4'){
+        const i = parseInt(e.key,10)-1; const input = document.querySelectorAll("input[name='opt']")[i];
+        if(input){ input.checked = true; btnNext.disabled = false; }
+      }
+      if(e.key==='Enter') next();
+      if(e.key==='Escape') back();
+    });
+  })();
+  </script>
+</body>
+</html>
