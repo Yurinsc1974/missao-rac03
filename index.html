@@ -179,18 +179,16 @@
 
   <script>
   (function(){
-    // URL da Web App (versão /exec)
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbyxmt_ERuldGmdP8lZjMhMiWua71Ixah_vWgGFAA4IVcb5D_uqGZC-C_ex-SqA9uVnMBg/exec';
+    // PASSO 5 — nova URL da Web App
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwQmQRJZXKfMstg7GrXupZd1Vr0nkL9AtEJz9_dY_Huu32HAdwl8HGs6PJMzA8aFYnQ/exec';
 
     // Pesos por pergunta (ajuste se quiser valorizar alguma)
-    const WEIGHTS = [1,1,1,1,1,1,1,1]; // 8 perguntas
-    const MAX_PER_Q = 5;               // máximo por pergunta
+    const WEIGHTS = [1,1,1,1,1,1,1,1];
+    const MAX_PER_Q = 5;
 
-    // Conversão % -> pontos (0..5) e risco correspondente (1..5)
-    const pctToPts  = p => (MAX_PER_Q * (p/100));       // 100=>5 ; 75=>3.75 ; 50=>2.5 ; 25=>1.25
+    const pctToPts  = p => (MAX_PER_Q * (p/100));
     const riskFromPct = p => (p>=100?1 : p>=75?2 : p>=50?3 : 5);
 
-    // ----------------- Base de Perguntas (percentuais por alternativa) -----------------
     const rawScenarios = [
       {
         img: 'https://images.unsplash.com/photo-1603791440384-56cd371ee9a7?auto=format&fit=crop&w=1200&q=80',
@@ -287,9 +285,8 @@
       opt: sc.opt.map(o => ({ ...o, pts: pctToPts(o.pct), risk: riskFromPct(o.pct) }))
     }));
 
-    // ----------------- Estado/elementos -----------------
     let player = '', step = 0;
-    let answers = new Array(scenarios.length).fill(null); // {idx, pts, risk}
+    let answers = new Array(scenarios.length).fill(null);
     let times = new Array(scenarios.length).fill(0);
     let t0 = 0, raf = 0;
     let sentOnce = false;
@@ -304,7 +301,12 @@
     const btnCSV=$('#btnCSV'), btnReiniciar=$('#btnReiniciar');
     const sendStatus=$('#sendStatus');
 
-    const fmtTime=ms=>{const s=Math.round(ms/1000);const m=String(Math.floor(s/60)).padStart(2,'0');const ss=String(s%60).padStart(2,'0');return `${m}:${ss}`;};
+    const fmtTime=ms=>{
+      const s=Math.round(ms/1000);
+      const m=String(Math.floor(s/60)).padStart(2,'0');
+      const ss=String(s%60).padStart(2,'0');
+      return `${m}:${ss}`;
+    };
 
     function drawDonut(id,percent,color){
       const el=document.getElementById(id);
@@ -317,14 +319,23 @@
 
     function drawRadar(id, axes){
       const el=document.getElementById(id),cx=50,cy=50,r=40,ang=[-90,30,150].map(a=>a*Math.PI/180);
-      const pts=axes.map((v,i)=>{const rr=r*v;return [cx+rr*Math.cos(ang[i]),cy+rr*Math.sin(ang[i])]});
-      const grid=[0.33,0.66,1].map(g=>{const gpts=ang.map(a=>`${cx+r*g*Math.cos(a)},${cy+r*g*Math.sin(a)}`);return `<polygon points="${gpts.join(' ')}" fill="none" stroke="rgba(255,255,255,.12)"/>`;}).join('');
+      const pts=axes.map((v,i)=>{const rr=r*v;return [cx+rr*Math.cos(ang[i]),cy+rr*Math.sin(ang[i])];});
+      const grid=[0.33,0.66,1].map(g=>{
+        const gpts=ang.map(a=>`${cx+r*g*Math.cos(a)},${cy+r*g*Math.sin(a)}`);
+        return `<polygon points="${gpts.join(' ')}" fill="none" stroke="rgba(255,255,255,.12)"/>`;
+      }).join('');
       const poly=`<polygon points="${pts.map(p=>p.join(',')).join(' ')}" fill="rgba(79,156,255,.25)" stroke="var(--accent)"/>`;
-      const labels=['Acerto','Atenção','Velocidade'].map((t,i)=>{const rr=r*1.15,x=cx+rr*Math.cos(ang[i]),y=cy+rr*Math.sin(ang[i]);return `<text x="${x}" y="${y}" text-anchor="middle" font-size="10" fill="#cbd6ee">${t}</text>`}).join('');
+      const labels=['Acerto','Atenção','Velocidade'].map((t,i)=>{
+        const rr=r*1.15,x=cx+rr*Math.cos(ang[i]),y=cy+rr*Math.sin(ang[i]);
+        return `<text x="${x}" y="${y}" text-anchor="middle" font-size="10" fill="#cbd6ee">${t}</text>`;
+      }).join('');
       el.innerHTML=`<g>${grid}${poly}${labels}</g>`;
     }
 
-    function updateTimer(){ timer.textContent=fmtTime(performance.now()-t0); raf=requestAnimationFrame(updateTimer); }
+    function updateTimer(){ 
+      timer.textContent=fmtTime(performance.now()-t0); 
+      raf=requestAnimationFrame(updateTimer); 
+    }
 
     function riskCategory(avg){
       if(avg <= 2) return {cat:'Perfil Conservador', extra:'', c:'var(--good)'};
@@ -332,46 +343,88 @@
       return {cat:'Perfil Ousado', extra:(avg >= 4.25 ? ' — com possível tendência a negligenciar riscos.' : ''), c:'var(--bad)'};
     }
 
-    function attentionLabel(p){ if(p>66) return 'Alta atenção e consistência.'; if(p>33) return 'Atenção moderada, algumas variações.'; return 'Baixa atenção, respostas inconsistentes.'; }
+    function attentionLabel(p){
+      if(p>66) return 'Alta atenção e consistência.';
+      if(p>33) return 'Atenção moderada, algumas variações.';
+      return 'Baixa atenção, respostas inconsistentes.';
+    }
 
     function start(){
       const n=(nameInput.value??'').trim();
       if(!n){alert('Por favor, informe seu nome.');return;}
-      player=n; step=0; sentOnce=false;
+      player=n;
+      step=0;
+      sentOnce=false;
       answers=new Array(scenarios.length).fill(null);
       times=new Array(scenarios.length).fill(0);
-      intro.style.display='none'; result.style.display='none'; game.style.display='grid';
+      intro.style.display='none';
+      result.style.display='none';
+      game.style.display='grid';
       render();
     }
 
     function render(){
       const total=scenarios.length,sc=scenarios[step];
-      sceneImg.src=sc.img; stepText.textContent=`Pergunta ${step+1} de ${total}`;
+      sceneImg.src=sc.img;
+      stepText.textContent=`Pergunta ${step+1} de ${total}`;
       progressBar.style.width=`${(step/total)*100}%`;
-      topic.textContent=sc.topic; questionText.textContent=sc.q; options.innerHTML='';
+      topic.textContent=sc.topic;
+      questionText.textContent=sc.q;
+      options.innerHTML='';
+
       sc.opt.forEach((o,idx)=>{
         const id=`opt_${step}_${idx}`;
-        const li=document.createElement('label'); li.className='opt'; li.setAttribute('for',id);
-        const radio=document.createElement('input'); radio.type='radio'; radio.name='opt'; radio.id=id; radio.dataset.idx=idx;
+        const li=document.createElement('label');
+        li.className='opt';
+        li.setAttribute('for',id);
+
+        const radio=document.createElement('input');
+        radio.type='radio';
+        radio.name='opt';
+        radio.id=id;
+        radio.dataset.idx=idx;
+
         if(answers[step]?.idx===idx) radio.checked=true;
         radio.addEventListener('change',()=>btnNext.disabled=false);
-        const span=document.createElement('div'); span.innerHTML=`<b>${idx+1})</b> ${o.t}`;
-        li.appendChild(radio); li.appendChild(span); options.appendChild(li);
+
+        const span=document.createElement('div');
+        span.innerHTML=`<b>${idx+1})</b> ${o.t}`;
+
+        li.appendChild(radio);
+        li.appendChild(span);
+        options.appendChild(li);
       });
-      btnNext.disabled=(answers[step]==null); btnBack.disabled=(step===0);
-      cancelAnimationFrame(raf); t0=performance.now(); updateTimer();
+
+      btnNext.disabled=(answers[step]==null);
+      btnBack.disabled=(step===0);
+      cancelAnimationFrame(raf);
+      t0=performance.now();
+      updateTimer();
     }
 
     function next(){
       const sel=document.querySelector("input[name='opt']:checked");
       if(!sel){alert('Selecione uma opção para continuar.');return;}
-      const dt=performance.now()-t0; times[step]+=dt;
-      const sc=scenarios[step]; const idx=parseInt(sel.dataset.idx,10); const choice=sc.opt[idx];
+
+      const dt=performance.now()-t0;
+      times[step]+=dt;
+
+      const sc=scenarios[step];
+      const idx=parseInt(sel.dataset.idx,10);
+      const choice=sc.opt[idx];
+
       answers[step]={idx, pts: choice.pts, risk: choice.risk};
-      step++; (step<scenarios.length)?render():finish();
+      step++;
+      (step<scenarios.length)?render():finish();
     }
 
-    function back(){ if(step===0) return; const dt=performance.now()-t0; times[step]+=dt; step--; render(); }
+    function back(){
+      if(step===0) return;
+      const dt=performance.now()-t0;
+      times[step]+=dt;
+      step--;
+      render();
+    }
 
     function calc(){
       const rows=answers.filter(v=>v!=null);
@@ -382,11 +435,12 @@
       for (let i=0; i<n; i++) totalPoints += WEIGHTS[i] * rows[i].pts;
       const maxPoints = MAX_PER_Q * wsum;
 
-      const scorePct = maxPoints ? (100 * totalPoints / maxPoints) : 0; // UI
-      const mediaGeral5 = totalPoints / wsum;                           // 0..5
+      const scorePct = maxPoints ? (100 * totalPoints / maxPoints) : 0;
+      const mediaGeral5 = totalPoints / wsum;
 
       const avgRisk = n ? (rows.reduce((a,b)=>a+b.risk,0)/n) : 1;
-      const diffs=[]; for(let i=1;i<n;i++) diffs.push(Math.abs(rows[i].risk-rows[i-1].risk));
+      const diffs=[];
+      for(let i=1;i<n;i++) diffs.push(Math.abs(rows[i].risk-rows[i-1].risk));
       const avgDiff=diffs.length?(diffs.reduce((a,b)=>a+b,0)/diffs.length):0;
       const attentionPct=Math.max(0,100-(avgDiff/4)*100);
 
@@ -398,11 +452,34 @@
       return {scorePct,mediaGeral5,avgRisk,riskPct,attentionPct,speedPct,avgDiff,s,total:n};
     }
 
+    function buildRespostasRaw(){
+      return scenarios.map((sc, i) => {
+        const a = answers[i];
+        const opt = a ? sc.opt[a.idx] : null;
+        return {
+          perguntaNumero: i + 1,
+          topico: sc.topic,
+          pergunta: sc.q,
+          respostaIdx: a ? a.idx : null,
+          respostaNumero: a ? (a.idx + 1) : null,
+          respostaTexto: opt ? opt.t : null,
+          percentual: opt ? opt.pct : null,
+          pontos: opt ? Number(opt.pts.toFixed(2)) : null,
+          risco: opt ? opt.risk : null,
+          tempoSeg: Number(((times[i] || 0) / 1000).toFixed(1))
+        };
+      });
+    }
+
     function finish(){
       cancelAnimationFrame(raf);
-      game.style.display='none'; result.style.display='block';
+      game.style.display='none';
+      result.style.display='block';
+
       const {scorePct,mediaGeral5,avgRisk,riskPct,attentionPct,speedPct,avgDiff,s,total}=calc();
-      const rc=riskCategory(avgRisk); const attTxt=attentionLabel(attentionPct); const riskText=rc.cat + (rc.extra||'');
+      const rc=riskCategory(avgRisk);
+      const attTxt=attentionLabel(attentionPct);
+      const riskText=rc.cat + (rc.extra||'');
 
       thanks.textContent=`Obrigado, ${player}! Aqui está seu resultado.`;
       summary.innerHTML=`Pontos (% do máximo): <span class="badge" style="background:${scorePct>=70?'var(--good)':scorePct>=40?'var(--warn)':'var(--bad)'}; color:#06101f">${scorePct.toFixed(0)}%</span><br>
@@ -416,10 +493,10 @@
       drawDonut('gaugeSpeed',speedPct,speedPct>66?'var(--good)':speedPct>33?'var(--warn)':'var(--bad)');
       drawRadar('radar',[scorePct/100,attentionPct/100,speedPct/100]);
 
-      // Lista de respostas
       answersList.innerHTML='';
       scenarios.forEach((sc,i)=>{
-        const a=answers[i]; const li=document.createElement('li');
+        const a=answers[i];
+        const li=document.createElement('li');
         if(!a){
           li.innerHTML=`<b>${sc.q}</b><br><span style="color:var(--muted)">Sem resposta.</span>`;
         }else{
@@ -429,57 +506,111 @@
         answersList.appendChild(li);
       });
 
-      // Export CSV
       btnCSV.onclick=function(){
         const header=['nome','pontos_%','media_0a5_ponderada','perfil_risco_texto','perfil_atencao_texto','tempo_medio_s','respostas_idx'];
-        const row=[player,scorePct.toFixed(0),mediaGeral5.toFixed(2),riskText,attTxt,s.toFixed(1),JSON.stringify(answers.map(a=>a?a.idx:null))];
+        const row=[
+          player,
+          scorePct.toFixed(0),
+          mediaGeral5.toFixed(2),
+          riskText,
+          attTxt,
+          s.toFixed(1),
+          JSON.stringify(answers.map(a=>a?a.idx:null))
+        ];
         const csv=header.join(',')+'\n'+row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',');
-        const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}); const url=URL.createObjectURL(blob);
-        const a=document.createElement('a'); a.href=url; a.download='resultado_rac03_quiz.csv'; document.body.appendChild(a); a.click();
-        document.body.removeChild(a); URL.revokeObjectURL(url);
+        const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+        const url=URL.createObjectURL(blob);
+        const a=document.createElement('a');
+        a.href=url;
+        a.download='resultado_rac03_quiz.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
       };
 
-      // Envio automático (única vez) — envia Média 0..5
+      // PASSO 6 — envio completo em JSON
       enviarResultado({
         nome: player,
         mediaGeral: mediaGeral5,
         perfilRisco: riskText,
-        perfilAtencao: attTxt
+        perfilAtencao: attTxt,
+        pontuacaoPct: scorePct,
+        tempoMedioSeg: s,
+        perfilRiscoValor: avgRisk,
+        perfilAtencaoPct: attentionPct,
+        respostasRaw: buildRespostasRaw()
       });
     }
 
-    async function enviarResultado({nome, mediaGeral, perfilRisco, perfilAtencao}){
+    async function enviarResultado({
+      nome,
+      mediaGeral,
+      perfilRisco,
+      perfilAtencao,
+      pontuacaoPct,
+      tempoMedioSeg,
+      perfilRiscoValor,
+      perfilAtencaoPct,
+      respostasRaw
+    }){
       try {
         if (sentOnce) return;
-        const dedupKey = `rac03_sent_${nome}_${new Date().toDateString()}`;
-        if (localStorage.getItem(dedupKey)) { sentOnce = true; return; }
+
+        const dedupKey = `rac03_sent_v2_${nome}_${new Date().toDateString()}`;
+        if (localStorage.getItem(dedupKey)) {
+          sentOnce = true;
+          return;
+        }
 
         sentOnce = true;
         sendStatus.className = 'status-badge status-warn';
         sendStatus.textContent = 'Enviando resultado...';
         sendStatus.style.display = 'inline-block';
 
-        const payload = new URLSearchParams({
+        const payload = {
           Nome: nome,
-          MediaGeral: String(Number(mediaGeral).toFixed(2)), // 0..5 com 2 casas
+          MediaGeral: Number(mediaGeral).toFixed(2),        // 0..5
           PerfilRisco: perfilRisco,
-          PerfilAtencao: perfilAtencao
+          PerfilAtencao: perfilAtencao,
+          PontuacaoPct: Number(pontuacaoPct).toFixed(0),    // 0..100
+          TempoMedioSeg: Number(tempoMedioSeg).toFixed(1),
+          PerfilRiscoValor: Number(perfilRiscoValor).toFixed(2),
+          PerfilAtencaoPct: Number(perfilAtencaoPct).toFixed(0),
+          RespostasRaw: respostasRaw,
+          Origem: 'github_pages',
+          Versao: 'rac03_v2'
+        };
+
+        const r = await fetch(GAS_URL, {
+          method:'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
         });
 
-        const r = await fetch(GAS_URL, { method:'POST', body: payload, redirect:'follow' });
-
         let ok = false;
-        try { const json = await r.json(); ok = json?.status === 'OK'; }
-        catch(_) { ok = r.ok; }
+        let responseData = null;
+
+        try {
+          responseData = await r.json();
+          ok = responseData?.status === 'OK';
+        } catch (_) {
+          ok = r.ok;
+        }
 
         if (ok) {
           localStorage.setItem(dedupKey, '1');
           sendStatus.className = 'status-badge status-ok';
           sendStatus.textContent = 'Resultado enviado!';
         } else {
+          console.warn('Resposta sem confirmação:', responseData);
           sendStatus.className = 'status-badge status-err';
           sendStatus.textContent = 'Falha no envio (sem confirmação)';
+          sentOnce = false;
         }
+
       } catch (err) {
         console.warn('Falha envio', err);
         sendStatus.className = 'status-badge status-err';
@@ -488,17 +619,28 @@
       }
     }
 
-    // ----------------- Eventos (definidos UMA vez) -----------------
     btnStart.addEventListener('click', start);
     btnNext.addEventListener('click', next);
     btnBack.addEventListener('click', back);
+    btnReiniciar.addEventListener('click', () => {
+      intro.style.display='grid';
+      game.style.display='none';
+      result.style.display='none';
+      nameInput.value='';
+      sendStatus.style.display='none';
+      sendStatus.textContent='Enviando resultado...';
+      sendStatus.className='status-badge status-warn';
+    });
 
     document.addEventListener('keydown', e=>{
       if (game.style.display!=='grid') return;
       if (e.key>='1' && e.key<='4'){
         const i=parseInt(e.key,10)-1;
         const input=document.querySelectorAll("input[name='opt']")[i];
-        if(input){ input.checked=true; btnNext.disabled=false; }
+        if(input){
+          input.checked=true;
+          btnNext.disabled=false;
+        }
       }
       if (e.key==='Enter') next();
       if (e.key==='Escape') back();
