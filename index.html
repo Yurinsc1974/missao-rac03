@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Missão RAC 03 — Quiz (Acerto x Risco)3333</title>
+  <title>Missão RAC 03 — Quiz (Acerto x Risco)</title>
   <style>
     :root{
       --bg:#0b1220;
@@ -374,7 +374,7 @@
     <header>
       <div class="logo"><span>R3</span></div>
       <div>
-        <h1>rrMissão RAC 03 — Quiz (Acerto x Risco)</h1>
+        <h1>Missão RAC 03 — Quiz (Acerto x Risco)</h1>
         <div style="color:var(--muted); font-size:14px">
           Responda situações reais de operação e segurança. Ao final, você verá seu <b>Índice de Acerto</b>, <b>Perfil de Risco</b> e <b>Atenção</b>.
         </div>
@@ -384,7 +384,7 @@
     <section id="intro" class="card">
       <div>
         <p class="lead">
-          Digite ssseu nome para começar. Leia cada questão e escolha a alternativa que melhor representa a conduta segura e correta.
+          Digite seu nome para começar. Leia cada questão e escolha a alternativa que melhor representa a conduta segura e correta.
         </p>
         <ul class="list">
           <li>Use o mouse ou as teclas <kbd>1</kbd>–<kbd>4</kbd> para marcar.</li>
@@ -605,7 +605,7 @@
       }));
 
       let player = '';
-      let company = '';
+      let empresaCapturada = '';
       let step = 0;
       let answers = new Array(scenarios.length).fill(null);
       let times = new Array(scenarios.length).fill(0);
@@ -724,20 +724,20 @@
 
       function start() {
         const n = (nameInput.value || '').trim();
-        const c = (companyInput.value || '').trim();
+        const e = (companyInput.value || '').trim();
 
         if (!n) {
           alert('Por favor, informe seu nome.');
           return;
         }
 
-        if (!c) {
+        if (!e) {
           alert('Por favor, informe a empresa.');
           return;
         }
 
         player = n;
-        company = c;
+        empresaCapturada = e;
         step = 0;
         sentOnce = false;
         answers = new Array(scenarios.length).fill(null);
@@ -973,7 +973,7 @@
 
           const row = [
             player,
-            company,
+            empresaCapturada,
             scorePct.toFixed(0),
             mediaGeral5.toFixed(2),
             riskText,
@@ -1001,7 +1001,7 @@
 
         enviarResultado({
           nome: player,
-          empresa: company,
+          empresa: empresaCapturada,
           mediaGeral: mediaGeral5,
           perfilRisco: riskText,
           perfilAtencao: attTxt,
@@ -1093,7 +1093,7 @@
         sendStatus.className = 'status-badge status-warn';
 
         player = '';
-        company = '';
+        empresaCapturada = '';
         step = 0;
         answers = new Array(scenarios.length).fill(null);
         times = new Array(scenarios.length).fill(0);
