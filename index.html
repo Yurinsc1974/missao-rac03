@@ -103,6 +103,7 @@
       background:#0d1526;
       color:var(--text);
       outline:none;
+      margin-bottom:12px;
     }
 
     .actions{
@@ -395,6 +396,10 @@
       <div class="panel">
         <label for="playerName">Seu nome ou apelido</label>
         <input id="playerName" type="text" placeholder="Ex.: Maria S." />
+
+        <label for="playerCompany">Empresa</label>
+        <input id="playerCompany" type="text" placeholder="Ex.: Vale" />
+
         <div class="actions">
           <button id="btnStart" class="btn-primary">Iniciar</button>
         </div>
@@ -600,6 +605,7 @@
       }));
 
       let player = '';
+      let company = '';
       let step = 0;
       let answers = new Array(scenarios.length).fill(null);
       let times = new Array(scenarios.length).fill(0);
@@ -614,6 +620,7 @@
       const result = $('#result');
 
       const nameInput = $('#playerName');
+      const companyInput = $('#playerCompany');
       const btnStart = $('#btnStart');
       const btnBack = $('#btnBack');
       const btnNext = $('#btnNext');
@@ -717,13 +724,20 @@
 
       function start() {
         const n = (nameInput.value || '').trim();
+        const c = (companyInput.value || '').trim();
 
         if (!n) {
           alert('Por favor, informe seu nome.');
           return;
         }
 
+        if (!c) {
+          alert('Por favor, informe a empresa.');
+          return;
+        }
+
         player = n;
+        company = c;
         step = 0;
         sentOnce = false;
         answers = new Array(scenarios.length).fill(null);
@@ -948,6 +962,7 @@
         btnCSV.onclick = function () {
           const header = [
             'nome',
+            'empresa',
             'pontos_%',
             'media_0a5_ponderada',
             'perfil_risco_texto',
@@ -958,6 +973,7 @@
 
           const row = [
             player,
+            company,
             scorePct.toFixed(0),
             mediaGeral5.toFixed(2),
             riskText,
@@ -985,26 +1001,20 @@
 
         enviarResultado({
           nome: player,
+          empresa: company,
           mediaGeral: mediaGeral5,
           perfilRisco: riskText,
           perfilAtencao: attTxt,
-          pontuacaoPct: scorePct,
-          tempoMedioSeg: s,
-          perfilRiscoValor: avgRisk,
-          perfilAtencaoPct: attentionPct,
           respostasRaw: buildRespostasRaw()
         });
       }
 
       async function enviarResultado({
         nome,
+        empresa,
         mediaGeral,
         perfilRisco,
         perfilAtencao,
-        pontuacaoPct,
-        tempoMedioSeg,
-        perfilRiscoValor,
-        perfilAtencaoPct,
         respostasRaw
       }) {
         try {
@@ -1022,29 +1032,25 @@
           sendStatus.textContent = 'Enviando resultado...';
           sendStatus.style.display = 'inline-block';
 
-         const payloadObj = {
-  Nome: nome,
-  MediaGeral: Number(mediaGeral).toFixed(2),
-  PerfilRisco: perfilRisco,
-  PerfilAtencao: perfilAtencao,
-  PontuacaoPct: Number(pontuacaoPct).toFixed(0),
-  TempoMedioSeg: Number(tempoMedioSeg).toFixed(1),
-  PerfilRiscoValor: Number(perfilRiscoValor).toFixed(2),
-  PerfilAtencaoPct: Number(perfilAtencaoPct).toFixed(0),
-  RespostasRaw: respostasRaw,
-  Origem: 'github_pages',
-  Versao: 'rac03_v3'
-};
+          const payloadObj = {
+            Nome: nome,
+            Empresa: empresa,
+            MediaGeral: Number(mediaGeral).toFixed(2),
+            PerfilRisco: perfilRisco,
+            PerfilAtencao: perfilAtencao,
+            RespostasRaw: respostasRaw,
+            Origem: 'github_pages',
+            Versao: 'rac03_v3'
+          };
 
-const r = await fetch(GAS_URL, {
-  method: 'POST',
-  redirect: 'follow',
-  headers: {
-    'Content-Type': 'text/plain;charset=utf-8'
-  },
-  body: JSON.stringify(payloadObj)
-});
-
+          const r = await fetch(GAS_URL, {
+            method: 'POST',
+            redirect: 'follow',
+            headers: {
+              'Content-Type': 'text/plain;charset=utf-8'
+            },
+            body: JSON.stringify(payloadObj)
+          });
 
           let ok = false;
           let responseData = null;
@@ -1081,11 +1087,13 @@ const r = await fetch(GAS_URL, {
         result.style.display = 'none';
 
         nameInput.value = '';
+        companyInput.value = '';
         sendStatus.style.display = 'none';
         sendStatus.textContent = 'Enviando resultado...';
         sendStatus.className = 'status-badge status-warn';
 
         player = '';
+        company = '';
         step = 0;
         answers = new Array(scenarios.length).fill(null);
         times = new Array(scenarios.length).fill(0);
