@@ -543,81 +543,84 @@
       });
     }
 
-    async function enviarResultado({
-      nome,
-      mediaGeral,
-      perfilRisco,
-      perfilAtencao,
-      pontuacaoPct,
-      tempoMedioSeg,
-      perfilRiscoValor,
-      perfilAtencaoPct,
-      respostasRaw
-    }){
-      try {
-        if (sentOnce) return;
+    <script>
+  async function enviarResultado({
+    nome,
+    mediaGeral,
+    perfilRisco,
+    perfilAtencao,
+    pontuacaoPct,
+    tempoMedioSeg,
+    perfilRiscoValor,
+    perfilAtencaoPct,
+    respostasRaw
+  }){
+    try {
+      if (sentOnce) return;
 
-        const dedupKey = `rac03_sent_v2_${nome}_${new Date().toDateString()}`;
-        if (localStorage.getItem(dedupKey)) {
-          sentOnce = true;
-          return;
-        }
-
+      const dedupKey = `rac03_sent_v2_${nome}_${new Date().toDateString()}`;
+      if (localStorage.getItem(dedupKey)) {
         sentOnce = true;
-        sendStatus.className = 'status-badge status-warn';
-        sendStatus.textContent = 'Enviando resultado...';
-        sendStatus.style.display = 'inline-block';
+        return;
+      }
 
-        const payload = {
-          Nome: nome,
-          MediaGeral: Number(mediaGeral).toFixed(2),        // 0..5
-          PerfilRisco: perfilRisco,
-          PerfilAtencao: perfilAtencao,
-          PontuacaoPct: Number(pontuacaoPct).toFixed(0),    // 0..100
-          TempoMedioSeg: Number(tempoMedioSeg).toFixed(1),
-          PerfilRiscoValor: Number(perfilRiscoValor).toFixed(2),
-          PerfilAtencaoPct: Number(perfilAtencaoPct).toFixed(0),
-          RespostasRaw: respostasRaw,
-          Origem: 'github_pages',
-          Versao: 'rac03_v2'
-        };
+      sentOnce = true;
+      sendStatus.className = 'status-badge status-warn';
+      sendStatus.textContent = 'Enviando resultado...';
+      sendStatus.style.display = 'inline-block';
 
-        const r = await fetch(GAS_URL, {
-          method:'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(payload)
-        });
+      const payload = {
+        Nome: nome,
+        MediaGeral: Number(mediaGeral).toFixed(2),
+        PerfilRisco: perfilRisco,
+        PerfilAtencao: perfilAtencao,
+        PontuacaoPct: Number(pontuacaoPct).toFixed(0),
+        TempoMedioSeg: Number(tempoMedioSeg).toFixed(1),
+        PerfilRiscoValor: Number(perfilRiscoValor).toFixed(2),
+        PerfilAtencaoPct: Number(perfilAtencaoPct).toFixed(0),
+        RespostasRaw: respostasRaw,
+        Origem: 'github_pages',
+        Versao: 'rac03_v2'
+      };
 
-        let ok = false;
-        let responseData = null;
+      const r = await fetch(GAS_URL, {
+        method: 'POST',
+        redirect: 'follow',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        },
+        body: JSON.stringify(payload)
+      });
 
-        try {
-          responseData = await r.json();
-          ok = responseData?.status === 'OK';
-        } catch (_) {
-          ok = r.ok;
-        }
+      let ok = false;
+      let responseData = null;
 
-        if (ok) {
-          localStorage.setItem(dedupKey, '1');
-          sendStatus.className = 'status-badge status-ok';
-          sendStatus.textContent = 'Resultado enviado!';
-        } else {
-          console.warn('Resposta sem confirmação:', responseData);
-          sendStatus.className = 'status-badge status-err';
-          sendStatus.textContent = 'Falha no envio (sem confirmação)';
-          sentOnce = false;
-        }
+      try {
+        responseData = await r.json();
+        ok = responseData?.status === 'OK';
+      } catch (_) {
+        ok = r.ok;
+      }
 
-      } catch (err) {
-        console.warn('Falha envio', err);
+      if (ok) {
+        localStorage.setItem(dedupKey, '1');
+        sendStatus.className = 'status-badge status-ok';
+        sendStatus.textContent = 'Resultado enviado!';
+      } else {
+        console.warn('Resposta sem confirmação:', responseData);
         sendStatus.className = 'status-badge status-err';
-        sendStatus.textContent = 'Falha no envio';
+        sendStatus.textContent = 'Falha no envio (sem confirmação)';
         sentOnce = false;
       }
+
+    } catch (err) {
+      console.warn('Falha envio', err);
+      sendStatus.className = 'status-badge status-err';
+      sendStatus.textContent = 'Falha no envio';
+      sentOnce = false;
     }
+  }
+</script>
 
     btnStart.addEventListener('click', start);
     btnNext.addEventListener('click', next);
