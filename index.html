@@ -1022,25 +1022,29 @@
           sendStatus.textContent = 'Enviando resultado...';
           sendStatus.style.display = 'inline-block';
 
-          const payload = new URLSearchParams({
-            Nome: nome,
-            MediaGeral: Number(mediaGeral).toFixed(2),
-            PerfilRisco: perfilRisco,
-            PerfilAtencao: perfilAtencao,
-            PontuacaoPct: Number(pontuacaoPct).toFixed(0),
-            TempoMedioSeg: Number(tempoMedioSeg).toFixed(1),
-            PerfilRiscoValor: Number(perfilRiscoValor).toFixed(2),
-            PerfilAtencaoPct: Number(perfilAtencaoPct).toFixed(0),
-            RespostasRaw: JSON.stringify(respostasRaw),
-            Origem: 'github_pages',
-            Versao: 'rac03_v3'
-          });
+         const payloadObj = {
+  Nome: nome,
+  MediaGeral: Number(mediaGeral).toFixed(2),
+  PerfilRisco: perfilRisco,
+  PerfilAtencao: perfilAtencao,
+  PontuacaoPct: Number(pontuacaoPct).toFixed(0),
+  TempoMedioSeg: Number(tempoMedioSeg).toFixed(1),
+  PerfilRiscoValor: Number(perfilRiscoValor).toFixed(2),
+  PerfilAtencaoPct: Number(perfilAtencaoPct).toFixed(0),
+  RespostasRaw: respostasRaw,
+  Origem: 'github_pages',
+  Versao: 'rac03_v3'
+};
 
-          const r = await fetch(GAS_URL, {
-            method: 'POST',
-            redirect: 'follow',
-            body: payload
-          });
+const r = await fetch(GAS_URL, {
+  method: 'POST',
+  redirect: 'follow',
+  headers: {
+    'Content-Type': 'text/plain;charset=utf-8'
+  },
+  body: JSON.stringify(payloadObj)
+});
+
 
           let ok = false;
           let responseData = null;
