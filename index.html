@@ -1020,7 +1020,7 @@
         try {
           if (sentOnce) return;
 
-          const dedupKey = `rac03_sent_v3_${nome}_${new Date().toDateString()}`;
+          const dedupKey = `rac03_sent_v3_${nome}_${empresa}_${new Date().toDateString()}`;
 
           if (localStorage.getItem(dedupKey)) {
             sentOnce = true;
