@@ -23,7 +23,7 @@
     #intro .lead{ font-size:18px; color:var(--muted) }
     #intro .panel{ background:var(--card); border-radius:12px; padding:20px; }
     label{ display:block; font-weight:600; margin-bottom:8px }
-    input[type=text]{ width:100%; padding:12px 14px; border-radius:10px; border:1px solid rgba(255,255,255,.15); background:#0d1526; color:var(--text); outline:none }
+    input[type=text]{ width:100%; padding:12px 14px; border-radius:10px; border:1px solid rgba(255,255,255,.15); background:#0d1526; color:var(--text); outline:none; margin-bottom:10px }
     .actions{ display:flex; gap:12px; margin-top:14px }
     button{ appearance:none; border:0; border-radius:10px; padding:12px 18px; color:#06101f; font-weight:700; cursor:pointer }
     .btn-primary{ background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:#06101f }
@@ -65,6 +65,8 @@
     }
     .badge{ display:inline-block; padding:3px 8px; border-radius:999px; font-weight:700; font-size:12px }
     .muted{ color:var(--muted); font-size:12px; }
+    #sendFrame{ display:none; }
+    #sendForm{ display:none; }
   </style>
 </head>
 <body>
@@ -181,20 +183,28 @@
     </section>
   </div>
 
+  <!-- envio oculto -->
+  <iframe id="sendFrame" name="sendFrame"></iframe>
+  <form id="sendForm" method="POST" target="sendFrame">
+    <input type="hidden" name="Nome" id="fNome">
+    <input type="hidden" name="Empresa" id="fEmpresa">
+    <input type="hidden" name="MediaGeral" id="fMediaGeral">
+    <input type="hidden" name="PerfilRisco" id="fPerfilRisco">
+    <input type="hidden" name="PerfilAtencao" id="fPerfilAtencao">
+  </form>
+
   <script>
   (function(){
     // URL da Web App (versão /exec)
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbwQmQRJZXKfMstg7GrXupZd1Vr0nkL9AtEJz9_dY_Huu32HAdwl8HGs6PJMzA8aFYnQ/exec';
 
     // Pesos por pergunta (ajuste se quiser valorizar alguma)
-    const WEIGHTS = [1,1,1,1,1,1,1,1]; // 8 perguntas
-    const MAX_PER_Q = 5;               // máximo por pergunta
+    const WEIGHTS = [1,1,1,1,1,1,1,1];
+    const MAX_PER_Q = 5;
 
-    // Conversão % -> pontos (0..5) e risco correspondente (1..5)
     const pctToPts  = p => (MAX_PER_Q * (p/100));
     const riskFromPct = p => (p>=100?1 : p>=75?2 : p>=50?3 : 5);
 
-    // ----------------- Base de Perguntas -----------------
     const rawScenarios = [
       {
         img: 'https://images.unsplash.com/photo-1603791440384-56cd371ee9a7?auto=format&fit=crop&w=1200&q=80',
@@ -291,9 +301,8 @@
       opt: sc.opt.map(o => ({ ...o, pts: pctToPts(o.pct), risk: riskFromPct(o.pct) }))
     }));
 
-    // ----------------- Estado/elementos -----------------
     let player = '', company = '', step = 0;
-    let answers = new Array(scenarios.length).fill(null); // {idx, pts, risk}
+    let answers = new Array(scenarios.length).fill(null);
     let times = new Array(scenarios.length).fill(0);
     let t0 = 0, raf = 0;
     let sentOnce = false;
@@ -307,6 +316,13 @@
     const thanks=$('#thanks'), summary=$('#summary'), answersList=$('#answersList');
     const btnCSV=$('#btnCSV'), btnReiniciar=$('#btnReiniciar');
     const sendStatus=$('#sendStatus');
+
+    const sendForm = $('#sendForm');
+    const fNome = $('#fNome');
+    const fEmpresa = $('#fEmpresa');
+    const fMediaGeral = $('#fMediaGeral');
+    const fPerfilRisco = $('#fPerfilRisco');
+    const fPerfilAtencao = $('#fPerfilAtencao');
 
     const fmtTime=ms=>{const s=Math.round(ms/1000);const m=String(Math.floor(s/60)).padStart(2,'0');const ss=String(s%60).padStart(2,'0');return `${m}:${ss}`;};
 
@@ -496,7 +512,6 @@
         URL.revokeObjectURL(url);
       };
 
-      // envio original, só acrescentando Empresa
       enviarResultado({
         nome: player,
         empresa: company,
@@ -506,7 +521,7 @@
       });
     }
 
-    async function enviarResultado({nome, empresa, mediaGeral, perfilRisco, perfilAtencao}){
+    function enviarResultado({nome, empresa, mediaGeral, perfilRisco, perfilAtencao}){
       try {
         if (sentOnce) return;
         const dedupKey = `rac03_sent_${nome}_${empresa}_${new Date().toDateString()}`;
@@ -517,32 +532,21 @@
         sendStatus.textContent = 'Enviando resultado...';
         sendStatus.style.display = 'inline-block';
 
-        const payload = new URLSearchParams({
-          Nome: nome,
-          Empresa: empresa,
-          MediaGeral: String(Number(mediaGeral).toFixed(2)),
-          PerfilRisco: perfilRisco,
-          PerfilAtencao: perfilAtencao
-        });
+        fNome.value = nome;
+        fEmpresa.value = empresa;
+        fMediaGeral.value = String(Number(mediaGeral).toFixed(2));
+        fPerfilRisco.value = perfilRisco;
+        fPerfilAtencao.value = perfilAtencao;
+        sendForm.action = GAS_URL;
 
-        const r = await fetch(GAS_URL, { method:'POST', body: payload, redirect:'follow' });
+        sendForm.submit();
 
-        let ok = false;
-        try { 
-          const json = await r.json(); 
-          ok = json?.status === 'OK'; 
-        } catch(_) { 
-          ok = r.ok; 
-        }
-
-        if (ok) {
-          localStorage.setItem(dedupKey, '1');
+        localStorage.setItem(dedupKey, '1');
+        setTimeout(() => {
           sendStatus.className = 'status-badge status-ok';
           sendStatus.textContent = 'Resultado enviado!';
-        } else {
-          sendStatus.className = 'status-badge status-err';
-          sendStatus.textContent = 'Falha no envio (sem confirmação)';
-        }
+        }, 500);
+
       } catch (err) {
         console.warn('Falha envio', err);
         sendStatus.className = 'status-badge status-err';
@@ -582,4 +586,3 @@
   </script>
 </body>
 </html>
-``
